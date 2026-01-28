@@ -1,82 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RC PVC PDF GENERATOR - FULL</title>
-  <style>
-    /* UI & WEB STYLES */
-    body { background: #f0f2f5; font-family: 'Segoe UI', Arial, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-    .no-print-zone { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 450px; text-align: center; }
-    input { width: 85%; padding: 12px; margin: 15px 0; border: 2px solid #ddd; border-radius: 8px; font-weight: bold; text-transform: uppercase; font-size: 16px; }
-    .btn-gen { background: #1a73e8; color: white; padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; }
-    .btn-print { background: #28a745; color: white; padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; display: none; width: 100%; margin-top: 15px; }
-    #loader { display: none; color: #1a73e8; font-weight: bold; margin: 10px; }
-
-    /* CARD STYLES */
-    .print-wrapper { display: none; flex-direction: column; align-items: center; gap: 20px; margin-top: 30px; }
-    .card { width: 8.56cm; height: 5.4cm; position: relative; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.2); background-size: 100% 100% !important; }
-    .front { background: url('https://iili.io/F3bdyFf.png') no-repeat center; }
-    .back { background: url('https://iili.io/F3b22uS.png') no-repeat center; }
-    .field { position: absolute; font-size: 6.5pt; color: #000; font-weight: bold; pointer-events: none; line-height: 1.2; }
-
-    /* PRINTING LOGIC */
-    @page { size: A4; margin: 0; }
-    @media print {
-      body { background: white; padding: 0; }
-      .no-print-zone { display: none !important; }
-      .print-wrapper { display: flex !important; padding-top: 1cm; gap: 0.5cm; }
-      .card { box-shadow: none !important; -webkit-print-color-adjust: exact; }
-    }
-  </style>
-</head>
-<body>
-
-  <div class="no-print-zone">
-    <h2 style="margin:0; color:#1a73e8;">🗂️ RC PVC GENERATOR</h2>
-    <input type="text" id="vNo" placeholder="DL01AB1234">
-    <button class="btn-gen" onclick="generateRC()">GENERATE SMART CARD</button>
-    <div id="loader">⏳ Fetching Secure Data...</div>
-    <button id="pBtn" class="btn-print" onclick="window.print()">📥 DOWNLOAD PVC PDF</button>
-  </div>
-
-  <div class="print-wrapper" id="pvc">
-    
-    <div class="card front">
-      <div class="field" style="top:13px; left:50%; transform:translateX(-50%); font-size:7.5pt;" id="f-class">VEHICLE CLASS</div>
-      <div class="field" style="top:40px; left:12px;" id="f-reg">--</div>
-      <div class="field" style="top:45px; right:40px; width:180px;">
-          Maker: <span id="f-maker">--</span><br>
-          Model: <span id="f-model">--</span><br>
-          Fuel: <span id="f-fuel">--</span><br>
-          Mfg Date: <span id="f-mfg">--</span>
-      </div>
-      <img id="qr" style="position:absolute; bottom:60px; left:8px; width:65px;">
-      <div class="field" style="bottom:7px; right:10px; text-align:center; width:100px;">Reg. Authority<br><span id="f-auth">--</span></div>
-    </div>
-
-    <div class="card back">
-      <div class="field" style="top:15px; left:105px;" id="b-gov">GOVERNMENT OF INDIA</div>
-      <div class="field" style="top:42px; left:83px;">
-          Reg No: <span id="b-reg">--</span> &nbsp;&nbsp; Date: <span id="b-date">--</span>
-      </div>
-      <div class="field" style="top:68px; left:83px; width:220px;">
-          Owner: <span id="b-name">--</span><br>
-          S/O: <span id="b-swd">--</span><br>
-          Address: <span id="b-addr" style="font-size:5.5pt;">--</span>
-      </div>
-      <div class="field" style="bottom:25px; left:10px;">
-          Engine: <span id="b-eng">--</span><br>
-          Chassis: <span id="b-cha">--</span>
-      </div>
-    </div>
-
-  </div>
-
-<script>
 async function generateRC() {
     const v = document.getElementById('vNo').value.toUpperCase().trim();
-    if(!v) return alert("Vehicle Number jaruri hai!");
+    if(!v) return alert("Vehicle Number daalein!");
     
     document.getElementById('loader').style.display = "block";
     document.getElementById('pvc').style.display = "none";
@@ -85,37 +9,41 @@ async function generateRC() {
         const res = await fetch(`/fetch-rc?vNo=${v}`);
         const data = await res.json();
         
-        if(!data.rc_chudai) throw new Error("Data not found");
-        const d = data.rc_chudai.data[0];
+        // --- DATA PATH FIX ---
+        // API response ke structure ke hisaab se mapping
+        const d = data.rc_chudai.data[0]; 
+        const basic = data.basic_vehicle_info;
+        const docs = data.registration_documents;
+        const owner = data.owner_details;
 
-        // FRONT MAPPING
-        document.getElementById('f-class').innerText = (d.vh_class || "VEHICLE").toUpperCase();
+        // FRONT CARD PE DATA DAALNA
+        document.getElementById('f-class').innerText = d.vh_class || "VEHICLE";
         document.getElementById('f-reg').innerText = v;
-        document.getElementById('f-maker').innerText = d.maker;
-        document.getElementById('f-model').innerText = d.vh_maker_model;
-        document.getElementById('f-fuel').innerText = d.fuel_type;
-        document.getElementById('f-mfg').innerText = data.basic_vehicle_info.manufacturing_year;
-        document.getElementById('f-auth').innerText = d.rto.split(',')[0];
-        document.getElementById('qr').src = `https://api.qrserver.com/v1/create-qr-code/?data=https://vahan.parivahan.gov.in/rcdetails/?regno=${v}`;
+        document.getElementById('f-maker').innerText = d.maker || "--";
+        document.getElementById('f-model').innerText = d.vh_maker_model || "--";
+        document.getElementById('f-fuel').innerText = d.fuel_type || "--";
+        document.getElementById('f-mfg').innerText = basic.manufacturing_year || "--";
+        document.getElementById('f-auth').innerText = d.rto ? d.rto.split(',')[0] : "--";
+        
+        // QR CODE
+        document.getElementById('qr').src = `https://api.qrserver.com/v1/create-qr-code/?data=${v}`;
 
-        // BACK MAPPING
-        document.getElementById('b-gov').innerText = "GOVERNMENT OF INDIA";
+        // BACK CARD PE DATA DAALNA
         document.getElementById('b-reg').innerText = v;
-        document.getElementById('b-date').innerText = data.registration_documents.registration_date;
-        document.getElementById('b-name').innerText = data.owner_details.owner_name;
+        document.getElementById('b-date').innerText = docs.registration_date || "--";
+        document.getElementById('b-name').innerText = owner.owner_name || "--";
         document.getElementById('b-swd').innerText = d.father_name || "--";
-        document.getElementById('b-addr').innerText = data.owner_details.permanent_address;
-        document.getElementById('b-eng').innerText = data.registration_documents.engine_no;
-        document.getElementById('b-cha').innerText = data.registration_documents.chassis_no;
+        document.getElementById('b-addr').innerText = owner.permanent_address || "--";
+        document.getElementById('b-eng').innerText = docs.engine_no || "--";
+        document.getElementById('b-cha').innerText = docs.chassis_no || "--";
 
+        // SAB KUCH DIKHAYEIN
         document.getElementById('pvc').style.display = "flex";
         document.getElementById('pBtn').style.display = "block";
     } catch(e) {
-        alert("Error: Vehicle details nahi mil rahi hain.");
+        console.error(e);
+        alert("API Response Error: Check Render Logs for details.");
     } finally {
         document.getElementById('loader').style.display = "none";
     }
 }
-</script>
-</body>
-</html>
