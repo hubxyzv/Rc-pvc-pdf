@@ -1,0 +1,14 @@
+{
+  "name": "rc-generator-pro",
+  "version": "1.0.0",
+  "description": "Automatic RC PDF Generator",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "axios": "^1.4.0",
+    "ejs": "^3.1.9"
+  }
+}
