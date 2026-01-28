@@ -8,7 +8,6 @@ app.use(express.static(__dirname));
 app.get('/fetch-rc', async (req, res) => {
     const { vNo } = req.query;
     try {
-        // Naya API URL update kiya gaya hai
         const apiUrl = `https://rc-pvc-api.vercel.app/?number=${vNo}`;
         const response = await axios.get(apiUrl);
         res.json(response.data);
