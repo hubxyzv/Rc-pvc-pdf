@@ -1,49 +1,236 @@
-async function generateRC() {
-    const v = document.getElementById('vNo').value.toUpperCase().trim();
-    if(!v) return alert("Vehicle Number daalein!");
-    
-    document.getElementById('loader').style.display = "block";
-    document.getElementById('pvc').style.display = "none";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RC PVC Pro | Digital Generator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+  <style>
+    :root {
+      --primary: #1a73e8;
+      --secondary: #202124;
+      --success: #28a745;
+      --bg: #f8f9fa;
+      --card-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
 
-    try {
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body { 
+      background: var(--bg); 
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+      color: var(--secondary);
+    }
+
+    /* --- HEADER & NAVIGATION --- */
+    nav {
+      background: #fff;
+      padding: 1rem 5%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      position: sticky; top: 0; z-index: 1000;
+    }
+    .logo { font-size: 1.5rem; font-weight: bold; color: var(--primary); display: flex; align-items: center; gap: 10px; }
+
+    /* --- MAIN CONTENT --- */
+    .container { max-width: 1000px; margin: 40px auto; padding: 0 20px; }
+
+    .search-card {
+      background: #fff;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: var(--card-shadow);
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .input-group {
+      display: flex;
+      gap: 10px;
+      max-width: 500px;
+      margin: 20px auto;
+    }
+
+    input {
+      flex: 1;
+      padding: 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 1.1rem;
+      text-transform: uppercase;
+      outline: none;
+      transition: 0.3s;
+    }
+    input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.1); }
+
+    button {
+      padding: 12px 25px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: 0.3s;
+    }
+
+    .btn-fetch { background: var(--primary); color: white; font-size: 1rem; }
+    .btn-fetch:hover { background: #1557b0; transform: translateY(-2px); }
+
+    .btn-print { 
+      background: var(--success); color: white; 
+      margin: 20px auto; display: none; font-size: 1.1rem;
+    }
+
+    /* --- LOADING ANIMATION --- */
+    #loader { display: none; margin: 20px auto; text-align: center; }
+    .spinner {
+      width: 40px; height: 40px; border: 4px solid #f3f3f3;
+      border-top: 4px solid var(--primary); border-radius: 50%;
+      animation: spin 1s linear infinite; margin: 0 auto 10px;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* --- PVC PREVIEW SECTION --- */
+    .preview-section { display: none; flex-direction: column; align-items: center; gap: 30px; }
+    .card-label { font-weight: bold; color: #5f6368; margin-bottom: 5px; font-size: 0.9rem; }
+
+    .pvc-card {
+      width: 8.56cm; height: 5.4cm;
+      background-size: 100% 100% !important;
+      position: relative;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+    }
+    .front { background-image: url('https://iili.io/F3bdyFf.png'); }
+    .back { background-image: url('https://iili.io/F3b22uS.png'); }
+
+    .field { position: absolute; font-size: 6.5pt; font-weight: bold; color: #000; line-height: 1.2; }
+
+    /* --- PRINT STYLES --- */
+    @media print {
+      nav, .search-card, .btn-print, .card-label { display: none !important; }
+      body { background: white; padding: 0; }
+      .container { margin: 0; padding: 0; }
+      .preview-section { display: flex !important; padding-top: 1cm; gap: 0.5cm; }
+      .pvc-card { box-shadow: none !important; margin-bottom: 5px; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="no-print">
+    <div class="logo"><i class="fas fa-id-card"></i> RC PVC PRO</div>
+    <div style="font-size: 0.9rem; color: #5f6368;"><i class="fas fa-shield-alt"></i> Secure API Channel</div>
+  </nav>
+
+  <div class="container">
+    <div class="search-card no-print">
+      <h1>RC Smart Card Generator</h1>
+      <p style="color: #5f6368; margin-top: 10px;">Enter vehicle number to fetch official RTO data and generate print-ready PVC card.</p>
+      
+      <div class="input-group">
+        <input type="text" id="vNo" placeholder="DL 1C A 1234" maxlength="11">
+        <button class="btn-fetch" onclick="generateRC()">
+          <i class="fas fa-search"></i> Fetch Data
+        </button>
+      </div>
+
+      <div id="loader">
+        <div class="spinner"></div>
+        <p>Connecting to Vahan Database...</p>
+      </div>
+
+      <button id="pBtn" class="btn-print" onclick="window.print()">
+        <i class="fas fa-file-pdf"></i> Download PVC PDF
+      </button>
+    </div>
+
+    <div class="preview-section" id="pvcOutput">
+      <div>
+        <p class="card-label">FRONT SIDE PREVIEW</p>
+        <div class="pvc-card front">
+          <div class="field" style="top:13px; left:50%; transform:translateX(-50%); font-size:7.5pt; text-align:center; width:100%;" id="f-class">VEHICLE CLASS</div>
+          <div class="field" style="top:40px; left:12px; font-size:8.5pt;" id="f-reg">--</div>
+          <div class="field" style="top:45px; right:35px; width:185px;">
+              <b>Maker:</b> <span id="f-maker">--</span><br>
+              <b>Model:</b> <span id="f-model">--</span><br>
+              <b>Fuel:</b> <span id="f-fuel">--</span><br>
+              <b>Mfg Date:</b> <span id="f-mfg">--</span>
+          </div>
+          <img id="qr" style="position:absolute; bottom:60px; left:8px; width:65px;">
+          <div class="field" style="bottom:7px; right:10px; text-align:center; width:100px;">Auth. Name<br><span id="f-auth">--</span></div>
+        </div>
+      </div>
+
+      <div>
+        <p class="card-label">BACK SIDE PREVIEW</p>
+        <div class="pvc-card back">
+          <div class="field" style="top:15px; left:105px; font-size:7.5pt;">GOVERNMENT OF INDIA</div>
+          <div class="field" style="top:42px; left:83px;">
+              <b>Reg No:</b> <span id="b-reg">--</span> &nbsp; <b>Date:</b> <span id="b-date">--</span>
+          </div>
+          <div class="field" style="top:68px; left:83px; width:220px;">
+              <b>Owner:</b> <span id="b-name">--</span><br>
+              <b>S/W/D:</b> <span id="b-swd">--</span><br>
+              <b>Address:</b> <span id="b-addr" style="font-size:5.5pt;">--</span>
+          </div>
+          <div class="field" style="bottom:25px; left:10px;">
+              <b>Engine:</b> <span id="b-eng">--</span><br>
+              <b>Chassis:</b> <span id="b-cha">--</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function generateRC() {
+      const v = document.getElementById('vNo').value.toUpperCase().replace(/\s/g, '');
+      if(!v) return alert("Vehicle Number enters karein!");
+      
+      document.getElementById('loader').style.display = "block";
+      document.getElementById('pvcOutput').style.display = "none";
+      document.getElementById('pBtn').style.display = "none";
+
+      try {
         const res = await fetch(`/fetch-rc?vNo=${v}`);
         const data = await res.json();
         
-        // --- DATA PATH FIX ---
-        // API response ke structure ke hisaab se mapping
-        const d = data.rc_chudai.data[0]; 
-        const basic = data.basic_vehicle_info;
-        const docs = data.registration_documents;
-        const owner = data.owner_details;
+        const d = data?.rc_chudai?.data?.[0];
+        if(!d) throw new Error("Invalid Response");
 
-        // FRONT CARD PE DATA DAALNA
+        // FRONT Mapping
         document.getElementById('f-class').innerText = d.vh_class || "VEHICLE";
         document.getElementById('f-reg').innerText = v;
         document.getElementById('f-maker').innerText = d.maker || "--";
         document.getElementById('f-model').innerText = d.vh_maker_model || "--";
         document.getElementById('f-fuel').innerText = d.fuel_type || "--";
-        document.getElementById('f-mfg').innerText = basic.manufacturing_year || "--";
-        document.getElementById('f-auth').innerText = d.rto ? d.rto.split(',')[0] : "--";
-        
-        // QR CODE
+        document.getElementById('f-mfg').innerText = data.basic_vehicle_info?.manufacturing_year || "--";
+        document.getElementById('f-auth').innerText = d.rto?.split(',')[0] || "RTO";
         document.getElementById('qr').src = `https://api.qrserver.com/v1/create-qr-code/?data=${v}`;
 
-        // BACK CARD PE DATA DAALNA
+        // BACK Mapping
         document.getElementById('b-reg').innerText = v;
-        document.getElementById('b-date').innerText = docs.registration_date || "--";
-        document.getElementById('b-name').innerText = owner.owner_name || "--";
+        document.getElementById('b-date').innerText = data.registration_documents?.registration_date || "--";
+        document.getElementById('b-name').innerText = data.owner_details?.owner_name || "--";
         document.getElementById('b-swd').innerText = d.father_name || "--";
-        document.getElementById('b-addr').innerText = owner.permanent_address || "--";
-        document.getElementById('b-eng').innerText = docs.engine_no || "--";
-        document.getElementById('b-cha').innerText = docs.chassis_no || "--";
+        document.getElementById('b-addr').innerText = data.owner_details?.permanent_address || "--";
+        document.getElementById('b-eng').innerText = data.registration_documents?.engine_no || "--";
+        document.getElementById('b-cha').innerText = data.registration_documents?.chassis_no || "--";
 
-        // SAB KUCH DIKHAYEIN
-        document.getElementById('pvc').style.display = "flex";
+        document.getElementById('pvcOutput').style.display = "flex";
         document.getElementById('pBtn').style.display = "block";
-    } catch(e) {
-        console.error(e);
-        alert("API Response Error: Check Render Logs for details.");
-    } finally {
+      } catch(e) {
+        alert("Vehicle Details fetch nahi ho saki. Check Number or API.");
+      } finally {
         document.getElementById('loader').style.display = "none";
+      }
     }
-}
+  </script>
+</body>
+</html>
