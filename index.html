@@ -3,66 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RC PVC PRO - Updated API</title>
+    <title>RC PVC PRO - Full Details Mode</title>
     <style>
-        /* CSS PRESERVED FROM YOUR DASHBOARD LOOK */
+        /* CSS PRESERVED & OPTIMIZED */
         html, body { height: 100%; margin: 0; padding: 0; background: #f0f2f5; font-family: 'Segoe UI', sans-serif; }
         .full-page-container { min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
         header { width: 100%; background: #1a73e8; color: white; padding: 20px 0; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
         .main-content { flex: 1; width: 100%; max-width: 1200px; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; }
         .search-box { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); width: 100%; max-width: 500px; text-align: center; margin-bottom: 30px; }
-        input { width: 80%; padding: 12px; font-size: 18px; border: 2px solid #ddd; border-radius: 8px; text-transform: uppercase; margin-bottom: 15px; }
+        input { width: 85%; padding: 12px; font-size: 18px; border: 2px solid #ddd; border-radius: 8px; text-transform: uppercase; margin-bottom: 15px; outline: none; }
         button { padding: 12px 30px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; transition: 0.3s; }
         .btn-blue { background: #1a73e8; color: white; }
         .btn-green { background: #28a745; color: white; display: none; margin-top: 20px; }
+        
+        /* CARD STYLES */
         .cards-display { display: none; flex-wrap: wrap; justify-content: center; gap: 40px; margin-top: 20px; }
-        .pvc-card { width: 8.56cm; height: 5.4cm; background-size: 100% 100% !important; position: relative; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .pvc-card { width: 8.56cm; height: 5.4cm; background-size: 100% 100% !important; position: relative; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); overflow: hidden; }
         .front { background: url('https://iili.io/F3bdyFf.png'); }
         .back { background: url('https://iili.io/F3b22uS.png'); }
-        .field { position: absolute; font-size: 6.5pt; font-weight: bold; color: black; line-height: 1.2; pointer-events: none; }
+        .field { position: absolute; font-size: 6pt; font-weight: bold; color: black; line-height: 1.1; pointer-events: none; }
         #loader { display: none; margin-top: 15px; color: #1a73e8; font-weight: bold; }
-        @media print { header, .search-box, .btn-green { display: none !important; } .cards-display { display: block !important; } .pvc-card { margin: 10px auto; box-shadow: none !important; } }
+
+        @media print {
+            header, .search-box, .btn-green { display: none !important; }
+            .cards-display { display: flex !important; flex-direction: column; align-items: center; gap: 0.5cm; padding-top: 1cm; }
+            .pvc-card { box-shadow: none !important; border: 0.2pt solid #ddd; }
+        }
     </style>
 </head>
 <body>
 
 <div class="full-page-container">
-    <header><h1>RC PVC GENERATOR PRO</h1></header>
+    <header><h1>RC PVC SMART GENERATOR</h1></header>
     <div class="main-content">
         <div class="search-box">
             <input type="text" id="vNo" placeholder="HR26EV0001">
             <br>
-            <button class="btn-blue" onclick="fetchRC()">Generate PVC Card</button>
-            <div id="loader">🔍 Extracting API Data...</div>
-            <button id="pBtn" class="btn-green" onclick="window.print()">Download PDF</button>
+            <button class="btn-blue" onclick="fetchRC()">FETCH FULL DETAILS</button>
+            <div id="loader">⏳ Parsing Full Vehicle Data...</div>
+            <button id="pBtn" class="btn-green" onclick="window.print()">PRINT / DOWNLOAD RC</button>
         </div>
 
         <div class="cards-display" id="displayArea">
             <div class="pvc-card front">
                 <div class="field" style="top:13px; left:50%; transform:translateX(-50%); font-size:7.5pt;" id="f-class">VEHICLE CLASS</div>
                 <div class="field" style="top:40px; left:12px; font-size:8pt;" id="f-reg">--</div>
-                <div class="field" style="top:45px; right:40px; width:180px;">
-                    Maker: <span id="f-maker">--</span><br>
-                    Model: <span id="f-model">--</span><br>
-                    Fuel: <span id="f-fuel">--</span><br>
-                    MFG: <span id="f-mfg">--</span>
+                <div class="field" style="top:45px; right:35px; width:185px;">
+                    <b>Maker:</b> <span id="f-maker">--</span><br>
+                    <b>Model:</b> <span id="f-model">--</span><br>
+                    <b>Fuel:</b> <span id="f-fuel">--</span> | <b>Norms:</b> <span id="f-norms">--</span><br>
+                    <b>Seating:</b> <span id="f-seat">--</span> | <b>Color:</b> <span id="f-color">--</span><br>
+                    <b>Weight:</b> <span id="f-weight">--</span> | <b>CC:</b> <span id="f-cc">--</span>
                 </div>
                 <img id="qr" style="position:absolute; bottom:60px; left:8px; width:65px;">
-                <div class="field" style="bottom:7px; right:10px; text-align:center; width:100px;">Authority:<br><span id="f-auth">--</span></div>
+                <div class="field" style="bottom:7px; right:10px; text-align:center; width:100px;">Authority:<br><span id="f-auth" style="font-size:5.5pt;">--</span></div>
             </div>
 
             <div class="pvc-card back">
-                <div class="field" style="top:42px; left:83px;">Reg No: <span id="b-reg">--</span> &nbsp; Date: <span id="b-date">--</span></div>
+                <div class="field" style="top:15px; left:105px; font-size:7.5pt;">GOVERNMENT OF INDIA</div>
+                <div class="field" style="top:42px; left:83px;"><b>Reg No:</b> <span id="b-reg">--</span> &nbsp; <b>Date:</b> <span id="b-date">--</span></div>
+                <div class="field" style="top:55px; left:250px; font-size:8pt; border:1px solid #000; border-radius:50%; width:15px; height:15px; text-align:center;" id="b-serial">1</div>
                 <div class="field" style="top:68px; left:83px; width:220px;">
-                    Owner: <span id="b-name">--</span><br>
-                    S/O: <span id="b-swd">--</span><br>
-                    Address: <span id="b-addr" style="font-size:5.5pt;">--</span>
+                    <b>Owner:</b> <span id="b-name">--</span><br>
+                    <b>Validity:</b> <span id="b-valid" style="color:red;">--</span><br>
+                    <b>Address:</b> <span id="b-addr" style="font-size:5.2pt; font-weight:normal;">--</span>
                 </div>
                 <div class="field" style="bottom:25px; left:10px;">
-                    Engine: <span id="b-eng">--</span><br>
-                    Chassis: <span id="b-cha">--</span>
+                    <b>Engine:</b> <span id="b-eng">--</span><br>
+                    <b>Chassis:</b> <span id="b-cha">--</span><br>
+                    <b>Finance:</b> <span id="b-fin">--</span>
                 </div>
-                <div class="field" style="top:15px; left:105px;">GOVERNMENT OF INDIA</div>
             </div>
         </div>
     </div>
@@ -70,53 +80,55 @@
 
 <script>
     async function fetchRC() {
-        const v = document.getElementById('vNo').value.toUpperCase().trim();
-        if(!v) return alert("Vehicle Number jaruri hai!");
+        const v = document.getElementById('vNo').value.toUpperCase().replace(/\s/g, '');
+        if(!v) return alert("Vehicle Number enters karein!");
         document.getElementById('loader').style.display="block";
 
         try {
             const res = await fetch(`/fetch-rc?vNo=${v}`);
             const data = await res.json();
             
-            if(!data.status) { alert("Vehicle not found!"); return; }
+            if(!data.status) throw new Error("API Error");
 
-            const str = data.formatted_data;
-
-            // Parsing Function
-            const getVal = (key) => {
+            const s = data.formatted_data;
+            const getV = (key) => {
                 const regex = new RegExp(`• ${key}: (.*)`, "i");
-                const match = str.match(regex);
+                const match = s.match(regex);
                 return match ? match[1].trim() : "--";
             };
 
-            // Mapping Data
-            document.getElementById('f-class').innerText = getVal("VEHICLE CLASS");
+            // Mapping to UI
+            document.getElementById('f-class').innerText = getV("VEHICLE CLASS");
             document.getElementById('f-reg').innerText = data.vehicle_no;
-            document.getElementById('f-maker').innerText = getVal("MAKER NAME");
-            document.getElementById('f-model').innerText = getVal("MODEL NAME");
-            document.getElementById('f-fuel').innerText = getVal("FUEL TYPE");
-            document.getElementById('f-mfg').innerText = getVal("MANUFACTURING YEAR");
-            document.getElementById('f-auth').innerText = getVal("RTO AUTHORITY").split(',')[0];
-            document.getElementById('qr').src = `https://api.qrserver.com/v1/create-qr-code/?data=${data.vehicle_no}`;
-            
+            document.getElementById('f-maker').innerText = getV("MAKER NAME");
+            document.getElementById('f-model').innerText = getV("MODEL NAME");
+            document.getElementById('f-fuel').innerText = getV("FUEL TYPE");
+            document.getElementById('f-norms').innerText = getV("EMISSION NORMS");
+            document.getElementById('f-seat').innerText = getV("SEATING CAPACITY");
+            document.getElementById('f-color').innerText = getV("COLOR");
+            document.getElementById('f-weight').innerText = getV("UNLADEN WEIGHT");
+            document.getElementById('f-cc').innerText = getV("CUBIC CAPACITY");
+            document.getElementById('f-auth').innerText = getV("RTO AUTHORITY");
+            document.getElementById('qr').src = `https://api.qrserver.com/v1/create-qr-code/?data=https://vahan.parivahan.gov.in/rcdetails/?regno=${data.vehicle_no}`;
+
             document.getElementById('b-reg').innerText = data.vehicle_no;
-            document.getElementById('b-date').innerText = getVal("REGISTRATION DATE");
-            document.getElementById('b-name').innerText = getVal("OWNER NAME");
-            document.getElementById('b-swd').innerText = "AS PER RC"; 
-            document.getElementById('b-addr').innerText = getVal("PERMANENT ADDRESS");
-            document.getElementById('b-eng').innerText = getVal("ENGINE / MOTOR NUMBER");
-            document.getElementById('b-cha').innerText = getVal("CHASSIS NUMBER");
+            document.getElementById('b-date').innerText = getV("REGISTRATION DATE");
+            document.getElementById('b-valid').innerText = getV("REGISTRATION VALIDITY");
+            document.getElementById('b-serial').innerText = getV("OWNER SERIAL");
+            document.getElementById('b-name').innerText = getV("OWNER NAME");
+            document.getElementById('b-addr').innerText = getV("PERMANENT ADDRESS");
+            document.getElementById('b-eng').innerText = getV("ENGINE / MOTOR NUMBER");
+            document.getElementById('b-cha').innerText = getV("CHASSIS NUMBER");
+            document.getElementById('b-fin').innerText = getV("FINANCIER NAME");
 
             document.getElementById('displayArea').style.display = "flex";
             document.getElementById('pBtn').style.display = "block";
-        } catch(e) { 
-            console.error(e);
-            alert("Data fetch error: " + e.message); 
-        } finally { 
-            document.getElementById('loader').style.display="none"; 
+        } catch(e) {
+            alert("Vehicle details nahi mili. Ek baar number check karein.");
+        } finally {
+            document.getElementById('loader').style.display="none";
         }
     }
 </script>
-
 </body>
 </html>
