@@ -3,24 +3,27 @@ const axios = require('axios');
 const path = require('path');
 const app = express();
 
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(__dirname));
 
-// API Endpoint for fetching vehicle data
-app.get('/fetch-vehicle', async (req, res) => {
-    const { number } = req.query;
-    if (!number) return res.status(400).json({ error: "Number is required" });
-
+app.get('/fetch-rc', async (req, res) => {
+    const { vNo } = req.query;
     try {
-        const response = await axios.get(`https://didactic-robot-phi.vercel.app/vehicle?number=${number}&key=CYBER-SAFE-7733`);
+        console.log(`Fetching data for: ${vNo}`);
+        const apiUrl = `https://didactic-robot-phi.vercel.app/vehicle?number=${vNo}&key=CYBER-SAFE-7733`;
+        const response = await axios.get(apiUrl);
+        
+        // Debugging ke liye: Render logs mein data dikhega
+        console.log("API Response Status:", response.status); 
         res.json(response.data);
     } catch (error) {
-        res.status(500).json({ error: "Failed to fetch data from API" });
+        console.error("API Error:", error.message);
+        res.status(500).json({ error: "API connection failed", details: error.message });
     }
 });
 
-app.get('*', (req, res) => {
+app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server live on port ${PORT}`));
