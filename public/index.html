@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vahan Pro | Digital RC PVC</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="navbar no-print">
+        <div class="logo">VAHAN DIGITAL PRO</div>
+        <div class="status">● SERVER LIVE</div>
+    </div>
+
+    <div class="search-container no-print" id="searchBox">
+        <h2>Smart RC Generator</h2>
+        <input type="text" id="vNoInput" placeholder="ENTER VEHICLE NO (e.g. HR26EV0001)">
+        <button id="submitBtn" onclick="fetchLiveData()">GENERATE RC CARD</button>
+    </div>
+
+    <div class="print-wrapper" id="printArea">
+        <div class="controls no-print">
+            <button class="btn-print" onclick="window.print()">PRINT RC CARD</button>
+            <button class="btn-new" onclick="location.reload()">NEW SEARCH</button>
+        </div>
+
+        <div class="rc-card">
+            <div class="gov-text" id="view-gov">Government of India</div>
+            <div class="regn-inline-container">
+                <div class="regn-item"><div class="regn-label">Regn. Number</div><div class="regn-value" id="view-regNo"></div></div>
+                <div class="regn-item"><div class="regn-label">Date of Regn.</div><div class="regn-value" id="view-regDate"></div></div>
+                <div class="regn-item" style="margin-left:-10px; position:relative;">
+                    <div class="top-meta" id="view-state">HR</div>
+                    <div class="regn-label">Regn. Validity</div><div class="regn-value" id="view-valid"></div>
+                </div>
+            </div>
+            <div class="owner-serial-box">
+                <div class="regn-label">Owner<br>Serial</div>
+                <div class="serial-circle" id="view-serial">1</div>
+            </div>
+            <div class="overlay-data">
+                <div class="data-row"><div class="overlay-label">Chassis Number</div><div class="overlay-value" id="view-chassis"></div></div>
+                <div class="data-row"><div class="overlay-label">Engine / Motor Number</div><div class="overlay-value" id="view-engine"></div></div>
+                <div class="data-row"><div class="overlay-label">Owner Name</div><div class="overlay-value" id="view-name"></div></div>
+                <div class="data-row"><div class="overlay-label">Address</div><div class="overlay-value" id="view-address"></div></div>
+            </div>
+            <div class="bottom-left">
+                <div><div class="regn-label">Fuel</div><div class="regn-value" id="view-fuel"></div></div>
+                <div style="margin-top:2px;"><div class="regn-label">Norms</div><div class="regn-value" id="view-norms"></div></div>
+            </div>
+        </div>
+
+        <div class="rc-card-front">
+            <div id="govText" class="gov-header-front">VEHICLE CLASS: MOTOR CAR</div>
+            <div class="regn-main-front">
+                <div class="regn-label">Regn. Number</div><div class="regn-value" id="f-regNo"></div>
+            </div>
+            <div class="front-grid">
+                <div class="pair"><div class="regn-label">Maker:</div><div class="regn-value" id="f-maker"></div></div>
+                <div class="pair"><div class="regn-label">Model:</div><div class="regn-value" id="f-model"></div></div>
+                <div class="pair-row">
+                    <div><div class="regn-label">Colour:</div><div class="regn-value" id="f-color"></div></div>
+                    <div><div class="regn-label">Body:</div><div class="regn-value" id="f-body"></div></div>
+                </div>
+                <div class="pair"><div class="regn-label">Seating Cap:</div><div class="regn-value" id="f-cap"></div></div>
+                <div class="pair"><div class="regn-label">Weight (Kg):</div><div class="regn-value" id="f-weight"></div></div>
+                <div class="pair-row">
+                    <div><div class="regn-label">CC:</div><div class="regn-value" id="f-cc"></div></div>
+                    <div><div class="regn-label">Wheelbase:</div><div class="regn-value" id="f-wheel"></div></div>
+                </div>
+                <div class="pair"><div class="regn-label">Financier:</div><div class="regn-value" id="f-finance"></div></div>
+            </div>
+            <img id="qrCodeImg" class="qr-code" src="">
+            <div class="rto-sign">Registration Authority<br><span id="f-rto"></span></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
