@@ -3,8 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RC_PVC_<%= v.regNo %></title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <title>RC_Merged_Validity_Verified - <%= v.regNo %></title>
   <style>
     /* 🛠️ CONSOLIDATED PRINT & UI STYLES - STRICTLY PRESERVED */
     @page { size: A4; margin: 0; }
@@ -19,15 +18,17 @@
         padding-top: 1cm !important; 
         gap: 0.5cm;
       }
-      .rc-card, .rc-card-front { box-shadow: none !important; margin-bottom: 10px !important; }
+      .rc-card, .rc-card-front { 
+        box-shadow: none !important; 
+        margin-bottom: 10px !important;
+      }
+      /* Specific Background Restorations for Print */
       .rc-card { background-image: url('https://iili.io/F3b22uS.png') !important; background-size: 100% 100% !important; }
       .rc-card-front { background: url('https://iili.io/F3bdyFf.png') center/100% 100% no-repeat !important; }
     }
 
     body { background: #f0f2f5; font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-    .btn-group { display: flex; gap: 10px; margin-bottom: 15px; }
-    .no-print { padding: 12px 30px; background: #28a745; color: white; border: none; cursor: pointer; border-radius: 6px; font-weight: bold; font-size: 16px; }
-    .btn-download { background: #007bff; }
+    .no-print { margin-bottom: 15px; padding: 12px 30px; background: #28a745; color: white; border: none; cursor: pointer; border-radius: 6px; font-weight: bold; font-size: 16px; }
     
     .status-panel { width: 8.5cm; background: #fff; border: 1px solid #ddd; padding: 10px; margin-top: 15px; border-radius: 5px; font-size: 8.5pt; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 
@@ -54,99 +55,96 @@
     .left-fields { position: absolute; top: 134px; left: 10px; }
     .label { font-weight: bold; font-size: 7pt; }
     .value { font-size: 7pt; font-weight: normal; }
+    #view-norms { font-size: 6.0pt; font-weight: normal; }
 
     /* --- CARD 2 STYLES --- */
+    @font-face { font-family: 'MyriadProBold'; src: local('Myriad Pro Bold'), local('MyriadPro-Bold'); font-weight: bold; }  
     .rc-card-front {  
       width: 8.56cm; height: 5.4cm; position: relative; font-size: 6.5pt; color: #000;  
       overflow: hidden; background: url('https://iili.io/F3bdyFf.png') center/100% 100% no-repeat;  
       box-shadow: 0 4px 12px rgba(0,0,0,0.15); box-sizing: border-box;
     }  
-    .gov-text-front { position: absolute; top: 13.4px; left: 50%; transform: translateX(-50%); font-weight: bold; font-size: 7.5pt; z-index: 10; white-space: nowrap; }  
+    .gov-text-front { position: absolute; top: 13.4px; left: 50%; transform: translateX(-50%); font-family: 'MyriadProBold', sans-serif; font-size: 7.5pt; font-weight: bold; z-index: 10; white-space: nowrap; }  
+    #categoryCircle { position: absolute; top: 16.96px; left: 12.501px; font-size: 6.0pt; font-weight: bold; font-family: 'MyriadProBold', sans-serif; z-index: 20; }
+    #stateCircle { position: absolute; top: 16.96px; left: 35.0px; font-size: 6.0pt; font-weight: bold; font-family: 'MyriadProBold', sans-serif; z-index: 20; }
+    .strict-state-style { top: 16.96px !important; left: 34.0px !important; }
     .regn-label-f { font-size: 6.5pt; font-weight: bold; margin-bottom: 1.5px; white-space: nowrap; }  
     .regn-value-f { font-size: 6.5pt; white-space: nowrap; margin-top: 1.5px; font-weight: normal; }  
-    .regn-block { position: absolute; top: 39px; right: 39px; width: 200px; display: flex; flex-direction: column; z-index: 10; }  
+    .regn-block { position: absolute; top: 39px; right: 39px; width: 200px; font-family: 'MyriadProBold', sans-serif; display: flex; flex-direction: column; z-index: 10; }  
     .pair { margin-bottom: 0.7px; }  
-    .left-fields-f { position: absolute; top: 147px; left: 11px; width: 120px; z-index: 10; }  
+    .left-fields-f { position: absolute; top: 147px; left: 11px; width: 120px; z-index: 10; font-family: 'MyriadProBold', sans-serif; }  
+    .left-fields-f .field-block { margin-bottom: 3px; }
   </style>
 </head>
 <body>
 
-<div class="btn-group">
-    <button class="no-print" onclick="window.print()">Print Card</button>
-    <button class="no-print btn-download" onclick="downloadPDF()">Download PDF</button>
-</div>
+<button class="no-print" onclick="window.print()">Print Both Cards / Save PDF</button>
 
-<div class="print-wrapper" id="download-area">
+<div class="print-wrapper">
   
-  <div class="rc-card">
-    <div class="gov-text">Government of <%= v.fullState %></div>
+  <div class="rc-card" id="rc-card">
+    <div class="gov-text" id="view-gov">Government of <%= v.fullState %></div>
     <div class="regn-inline-container">
-      <div class="regn-item"><div class="regn-label">Regn. Number</div><div class="regn-value"><%= v.regNo %></div></div>
-      <div class="regn-item"><div class="regn-label">Date of Regn.</div><div class="regn-value"><%= v.regDate %></div></div>
+      <div class="regn-item"><div class="regn-label">Regn. Number</div><div class="regn-value" id="view-regNo"><%= v.regNo %></div></div>
+      <div class="regn-item"><div class="regn-label">Date of Regn.</div><div class="regn-value" id="view-regDate"><%= v.regDate %></div></div>
       <div class="regn-item" style="margin-left: -10px; position: relative;">
-        <div id="view-cat"><%= v.vCat %></div>
-        <div id="view-state"><%= v.stateCode %></div>
+        <div id="view-cat" style="top:16.96px; left:12.501px;"><%= v.vCat %></div>
+        <div id="view-state" style="top:16.96px; left:35.0px;"><%= v.stateCode %></div>
         <div class="regn-label">Regn. Validity</div>
-        <div class="regn-value"><%= v.validity %></div>
+        <div class="regn-value" id="view-valid"><%= v.validity %></div>
       </div>
     </div>
     <div class="regn-container">
       <div class="regn-label" style="font-weight:bold; font-size:7pt;">Owner<br>Serial</div>
-      <div class="regn-value-circle"><%= v.serial %></div>
+      <div class="regn-value-circle" id="view-serial"><%= v.serial %></div>
     </div>
     <div class="overlay-front">
-      <div class="overlay-item"><div class="overlay-label">Chassis Number</div><div class="overlay-value"><%= v.chassis %></div></div>
-      <div class="overlay-item"><div class="overlay-label">Engine / Motor Number</div><div class="overlay-value"><%= v.engine %></div></div>
-      <div class="overlay-item"><div class="overlay-label">Owner Name</div><div class="overlay-value"><%= v.owner %></div></div>
-      <div class="overlay-item"><div class="overlay-label">Son / Wife / Daughter of</div><div class="overlay-value"><%= v.swd %></div></div>
+      <div class="overlay-item"><div class="overlay-label">Chassis Number</div><div class="overlay-value" id="view-chassis"><%= v.chassis %></div></div>
+      <div class="overlay-item"><div class="overlay-label">Engine / Motor Number</div><div class="overlay-value" id="view-engine"><%= v.engine %></div></div>
+      <div class="overlay-item"><div class="overlay-label">Owner Name</div><div class="overlay-value" id="view-name"><%= v.owner %></div></div>
+      <div class="overlay-item"><div class="overlay-label">Son / Wife / Daughter of</div><div class="overlay-value" id="view-swd"><%= v.swd %></div></div>
       <div class="overlay-address-box">
-        <div class="overlay-item"><div class="overlay-label">Address</div><div class="overlay-value"><%= v.address %></div></div>
+        <div class="overlay-item"><div class="overlay-label">Address</div><div class="overlay-value" id="view-address"><%= v.address %></div></div>
       </div>
     </div>
     <div class="left-fields">
-      <div class="field-block"><div class="label">Fuel</div><div class="value"><%= v.fuel %></div></div>
-      <div class="field-block"><div class="label">Emission Norms</div><div class="value"><%= v.norms %></div></div>
+      <div class="field-block"><div class="label">Fuel</div><div class="value" id="view-fuel"><%= v.fuel %></div></div>
+      <div class="field-block"><div class="label">Emission Norms</div><div class="value" id="view-norms"><%= v.norms %></div></div>
     </div>
   </div>
 
   <div class="rc-card-front">  
-    <div class="gov-text-front">VEHICLE CLASS: <%= v.vClass %></div>  
-    <div id="view-cat" style="top:16.96px; left:12.5px;"><%= v.vCat %></div>  
-    <div id="view-state" style="top:16.96px; left:35.0px;"><%= v.stateCode %></div>  
+    <div id="govText" class="gov-text-front">VEHICLE CLASS: <%= v.vClass %></div>  
+    <div id="categoryCircle"><%= v.vCat %></div>  
+    <div id="stateCircle" class="<%= ['MH', 'MN', 'MZ', 'WB'].includes(v.stateCode) ? 'strict-state-style' : '' %>"><%= v.stateCode %></div>  
     <div class="regn-item" style="position: absolute; top: 39px; right: 254px;">  
       <div class="regn-label-f">Regn. Number</div>  
-      <div class="regn-value-f"><%= v.regNo %></div>  
+      <div class="regn-value-f" id="regNoDisplay"><%= v.regNo %></div>  
     </div>  
     <div class="regn-block">  
       <div class="pair" style="margin-left: 20px;"><div class="regn-label-f">Maker:</div><div class="regn-value-f"><%= v.maker %></div></div>  
       <div class="pair" style="margin-left: 20px;"><div class="regn-label-f">Model:</div><div class="regn-value-f"><%= v.model %></div></div>  
       <div class="pair" style="margin-left: 20px;"><div style="display: flex; gap: 40px;"><div><div class="regn-label-f">Colour:</div><div class="regn-value-f"><%= v.color %></div></div><div><div class="regn-label-f">/Body Type:</div><div class="regn-value-f"><%= v.body %></div></div></div></div>  
-      <div class="pair" style="margin-left: 20px;"><div class="regn-label-f">Seating Capacity</div><div class="regn-value-f"><%= v.seating %></div></div>  
+      <div class="pair" style="margin-left: 20px;"><div class="regn-label-f">Seating (in all) Capacity</div><div class="regn-value-f"><%= v.seating %></div></div>  
       <div class="pair" style="margin-left: 20px;"><div class="regn-label-f">Unladen Weight (Kg)</div><div class="regn-value-f"><%= v.weight %></div></div>  
-      <div class="pair" style="margin-left: 20px;"><div style="display: flex; gap: 4px;"><div style="text-align: left;"><div class="regn-label-f">Cubic Cap.</div><div class="regn-value-f"><%= v.cc %></div></div><div style="text-align: left;"><div class="regn-label-f">/BHP</div><div class="regn-value-f">--</div></div><div style="text-align: left;"><div class="regn-label-f">/Wheel Base</div><div class="regn-value-f"><%= v.wheelbase %></div></div></div></div>  
+      <div class="pair" style="margin-left: 20px;"><div style="display: flex; gap: 4px;"><div style="text-align: left;"><div class="regn-label-f">Cubic Cap.</div><div class="regn-value-f"><%= v.cc %></div></div><div style="text-align: left;"><div class="regn-label-f">/Horse Power (BHP/Kw)</div><div class="regn-value-f">--</div></div><div style="text-align: left;"><div class="regn-label-f">/Wheel Base (mm)</div><div class="regn-value-f"><%= v.wheelbase %></div></div></div></div>  
       <div class="pair" style="margin-left: 20px;"><div class="regn-label-f">Financier</div><div class="regn-value-f"><%= v.financier %></div></div>  
     </div>  
     <div class="left-fields-f">  
-      <div class="field-block"><div class="regn-label-f">Mfg. Year</div><div class="regn-value-f"><%= v.mfg %></div></div>  
+      <div class="field-block"><div class="regn-label-f">Month -Year of Mfg.</div><div class="regn-value-f"><%= v.mfg %></div></div>  
+      <div class="field-block"><div class="regn-label-f">No. of Cylinders:</div><div class="regn-value-f">--</div></div>  
     </div>  
-    <img style="position:absolute; bottom:60px; left:6px; width:22mm; height:22mm; z-index:10;" src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=https://vahan.parivahan.gov.in/rcdetails/?regno=<%= v.regNo %>" alt="QR Code" />
-    <div style="position: absolute; bottom: 7px; right: 10px; font-size: 6.5pt; text-align: center; width: 100px;">Registration Authority<br /><%= v.rto %></div>
+    <img id="qrCodeImg" style="position:absolute; bottom:60px; left:6px; width:22mm; height:22mm; z-index:10;" src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=https://vahan.parivahan.gov.in/rcdetails/?regno=<%= v.regNo %>" alt="QR Code" />
+    <div style="position: absolute; top: 50%; right: 7px; transform: translateY(-50%) rotate(180deg); writing-mode: vertical-rl; font-size: 6.5pt; text-align: right; z-index: 15;">Form : 23A</div>  
+    <div style="position: absolute; bottom: 7px; right: 10px; font-size: 6.5pt; line-height: 1.2; text-align: center; z-index: 10; width: 100px;">Registration Authority<br /><%= v.rto %></div>
   </div>
 
 </div>
 
-<script>
-  function downloadPDF() {
-    const element = document.getElementById('download-area');
-    const opt = {
-      margin: 0,
-      filename: 'RC_<%= v.regNo %>.pdf',
-      image: { type: 'jpeg', quality: 1 },
-      html2canvas: { scale: 4, useCORS: true },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
-    html2pdf().set(opt).from(element).save();
-  }
-</script>
+<div class="status-panel">
+  <strong>System Status:</strong>
+  <div id="status-msg">✔ Verified Data Loaded for <%= v.regNo %></div>
+</div>
+
 </body>
 </html>
