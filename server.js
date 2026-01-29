@@ -1,47 +1,25 @@
 const express = require('express');
 const axios = require('axios');
-const app = express();
 const path = require('path');
+const app = express();
 
-// EJS setup
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// State Mapping for "Government of [State Name]"
-const stateMap = { 
-    "AP": "Andhra Pradesh", "AR": "Arunachal Pradesh", "AS": "Assam", "BR": "Bihar", "CG": "Chhattisgarh", 
-    "CH": "Chandigarh", "DD": "Daman and Diu", "DL": "Delhi", "GA": "Goa", "GJ": "Gujarat", "HR": "Haryana", 
-    "HP": "Himachal Pradesh", "JH": "Jharkhand", "JK": "Jammu and Kashmir", "KA": "Karnataka", "KL": "Kerala", 
-    "LA": "Ladakh", "LD": "Lakshadweep", "MH": "Maharashtra", "ML": "Meghalaya", "MN": "Manipur", 
-    "MP": "Madhya Pradesh", "MZ": "Mizoram", "NL": "Nagaland", "OD": "Odisha", "PB": "Punjab", 
-    "PY": "Puducherry", "RJ": "Rajasthan", "SK": "Sikkim", "TN": "Tamil Nadu", "TR": "Tripura", 
-    "TS": "Telangana", "UK": "Uttarakhand", "UP": "Uttar Pradesh", "WB": "West Bengal" 
-};
+const stateMap = { AP: "Andhra Pradesh", AR: "Arunachal Pradesh", AS: "Assam", BR: "Bihar", CG: "Chhattisgarh", CH: "Chandigarh", DD: "Daman and Diu", DL: "Delhi", GA: "Goa", GJ: "Gujarat", HR: "Haryana", HP: "Himachal Pradesh", JH: "Jharkhand", JK: "Jammu and Kashmir", KA: "Karnataka", KL: "Kerala", LA: "Ladakh", LD: "Lakshadweep", MH: "Maharashtra", ML: "Meghalaya", MN: "Manipur", MP: "Madhya Pradesh", MZ: "Mizoram", NL: "Nagaland", OD: "Odisha", PB: "Punjab", PY: "Puducherry", RJ: "Rajasthan", SK: "Sikkim", TN: "Tamil Nadu", TR: "Tripura", TS: "Telangana", UK: "Uttarakhand", UP: "Uttar Pradesh", WB: "West Bengal" };
 
-// Route to handle dynamic vehicle numbers
 app.get('/rc/:vno', async (req, res) => {
     try {
         const vno = req.params.vno.toUpperCase();
-        
-        // Fetch data from API
         const response = await axios.get(`https://rc-pvc-api.vercel.app/?number=${vno}`);
-        
-        if (!response.data || !response.data.formatted_data) {
-            return res.status(404).send("Vehicle details not found.");
-        }
-
         const raw = response.data.formatted_data;
+        const extract = (regex) => (raw.match(regex) ? raw.match(regex)[1].trim() : "--");
 
-        // Helper function to extract data using Regex
-        const extract = (regex) => {
-            const match = raw.match(regex);
-            return match && match[1] ? match[1].trim() : "--";
-        };
+        // NT vs TP Logic
+        const isTransport = raw.includes("TRANSPORT") && !raw.includes("NON-TRANSPORT");
+        const statusType = isTransport ? "TP" : "NT";
 
-        // Extracting State Code for Header and Circle
         const sc = extract(/STATE CODE: (.*)/) || vno.substring(0, 2);
-
-        // Building the Data Object for EJS
         const v = {
             regNo: response.data.vehicle_no || vno,
             regDate: extract(/REGISTRATION DATE: (.*)/),
@@ -54,7 +32,7 @@ app.get('/rc/:vno', async (req, res) => {
             chassis: extract(/CHASSIS NUMBER: (.*)/),
             engine: extract(/ENGINE \/ MOTOR NUMBER: (.*)/),
             vClass: extract(/VEHICLE CLASS: (.*)/),
-            vCat: extract(/VEHICLE CATEGORY: (.*)/),
+            vCat: statusType, // Strictly NT or TP
             maker: extract(/MAKER NAME: (.*)/),
             model: extract(/MODEL NAME: (.*)/),
             body: extract(/BODY TYPE: (.*)/),
@@ -67,26 +45,17 @@ app.get('/rc/:vno', async (req, res) => {
             wheelbase: extract(/WHEEL BASE: (.*)/),
             color: extract(/COLOR: (.*)/),
             financier: extract(/FINANCIER NAME: (.*)/),
-            rto: extract(/RTO AUTHORITY: (.*)/).split(',')[0], // Taking only city name
+            rto: extract(/RTO AUTHORITY: (.*)/).split(',')[0],
             swd: extract(/SON \/ WIFE \/ DAUGHTER OF: (.*)/)
         };
 
-        // Render the index.ejs with the vehicle object
         res.render('index', { v });
-
-    } catch (error) {
-        console.error("API Error:", error.message);
-        res.status(500).send("Server Error: API is currently unavailable or the link is broken.");
+    } catch (err) {
+        res.status(500).send("API Error or Invalid Vehicle Number.");
     }
 });
 
-// Default Route
-app.get('/', (req, res) => {
-    res.send("Welcome! Use URL like: /rc/HR26EV0001 to generate RC.");
-});
+app.get('/', (req, res) => res.send("Server Running. Use /rc/[VEHICLE_NUMBER]"));
 
-// Port configuration
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
