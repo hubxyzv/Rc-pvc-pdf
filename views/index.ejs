@@ -2,14 +2,16 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>RC PVC - <%= d.regNo %></title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RC_PVC_<%= v.regNo %></title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
-    /* 🛠️ CONSOLIDATED PRINT & UI STYLES */
+    /* 🛠️ CONSOLIDATED PRINT & UI STYLES - STRICTLY PRESERVED */
     @page { size: A4; margin: 0; }
     @media print {
       * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
       body { background: #fff !important; padding: 0 !important; }
-      .no-print { display: none !important; }
+      .no-print, .status-panel { display: none !important; }
       .print-wrapper { 
         display: flex !important; 
         flex-direction: column !important; 
@@ -17,12 +19,17 @@
         padding-top: 1cm !important; 
         gap: 0.5cm;
       }
+      .rc-card, .rc-card-front { box-shadow: none !important; margin-bottom: 10px !important; }
       .rc-card { background-image: url('https://iili.io/F3b22uS.png') !important; background-size: 100% 100% !important; }
       .rc-card-front { background: url('https://iili.io/F3bdyFf.png') center/100% 100% no-repeat !important; }
     }
 
-    body { background: #f0f2f5; font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; -webkit-user-select: none; user-select: none; }
-    .no-print { margin-bottom: 15px; padding: 12px 30px; background: #28a745; color: white; border: none; cursor: pointer; border-radius: 6px; font-weight: bold; font-size: 16px; }
+    body { background: #f0f2f5; font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+    .btn-group { display: flex; gap: 10px; margin-bottom: 15px; }
+    .no-print { padding: 12px 30px; background: #28a745; color: white; border: none; cursor: pointer; border-radius: 6px; font-weight: bold; font-size: 16px; }
+    .btn-download { background: #007bff; }
+    
+    .status-panel { width: 8.5cm; background: #fff; border: 1px solid #ddd; padding: 10px; margin-top: 15px; border-radius: 5px; font-size: 8.5pt; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 
     /* --- CARD 1 STYLES --- */
     .rc-card {
@@ -31,12 +38,15 @@
       overflow: hidden; image-rendering: -webkit-optimize-contrast; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
       margin-bottom: 20px;
     }
-    .gov-text { position: absolute; top: 15.68px; left: 104.3px; font-weight: bold; font-size: 7.5pt; white-space: nowrap; }
+    .gov-text { position: absolute; top: 15.68001px; left: 104.3px; font-weight: bold; font-size: 7.50001pt; text-transform: none; white-space: nowrap; }
+    #view-cat { position: absolute; top: 16.96px; left: 12.501px; font-size: 6.0pt; width: 17px; height: 17px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+    #view-state { position: absolute; top: 16.96px; left: 35.0px; font-size: 6.0pt; width: 17px; height: 17px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+    .overlay-address-box { position: absolute; top: 91.7px; left: 0px; width: 100%; }
+    .regn-container .regn-value-circle { position: absolute; top: 8px; left: 26px; width: 13px; height: 13px; border: 1.2px solid #000; border-radius: 50%; text-align: center; line-height: 13px; font-weight: bold; font-size: 8pt; }
     .regn-inline-container { position: absolute; top: 42px; left: 83px; display: flex; gap: 25px; font-weight: bold; }
     .regn-label { font-size: 6.8pt; font-weight: bold; }
     .regn-value { font-size: 7pt; font-weight: normal; }
     .regn-container { position: absolute; top: 67px; left: 245px; }
-    .regn-value-circle { position: absolute; top: 8px; left: 26px; width: 13px; height: 13px; border: 1.2px solid #000; border-radius: 50%; text-align: center; line-height: 13px; font-weight: bold; font-size: 8pt; }
     .overlay-front { position: absolute; top: 67px; left: 83px; width: 225px; }
     .overlay-item { margin-bottom: 3px; }
     .overlay-label { font-weight: bold; font-size: 6.8pt; }
@@ -49,68 +59,94 @@
     .rc-card-front {  
       width: 8.56cm; height: 5.4cm; position: relative; font-size: 6.5pt; color: #000;  
       overflow: hidden; background: url('https://iili.io/F3bdyFf.png') center/100% 100% no-repeat;  
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15); box-sizing: border-box;
     }  
     .gov-text-front { position: absolute; top: 13.4px; left: 50%; transform: translateX(-50%); font-weight: bold; font-size: 7.5pt; z-index: 10; white-space: nowrap; }  
-    #stateCircle { position: absolute; top: 16.96px; left: 35.0px; font-size: 6.0pt; font-weight: bold; z-index: 20; }
+    .regn-label-f { font-size: 6.5pt; font-weight: bold; margin-bottom: 1.5px; white-space: nowrap; }  
+    .regn-value-f { font-size: 6.5pt; white-space: nowrap; margin-top: 1.5px; font-weight: normal; }  
     .regn-block { position: absolute; top: 39px; right: 39px; width: 200px; display: flex; flex-direction: column; z-index: 10; }  
-    .regn-label-f { font-size: 6.5pt; font-weight: bold; }  
-    .regn-value-f { font-size: 6.5pt; font-weight: normal; }
     .pair { margin-bottom: 0.7px; }  
+    .left-fields-f { position: absolute; top: 147px; left: 11px; width: 120px; z-index: 10; }  
   </style>
-  <script>
-    document.addEventListener('contextmenu', e => e.preventDefault());
-    document.onkeydown = e => { if(e.keyCode == 123 || (e.ctrlKey && e.shiftKey && e.keyCode == 73)) return false; };
-  </script>
 </head>
 <body>
 
-<button class="no-print" onclick="window.print()">Print Both Cards / Save PDF</button>
+<div class="btn-group">
+    <button class="no-print" onclick="window.print()">Print Card</button>
+    <button class="no-print btn-download" onclick="downloadPDF()">Download PDF</button>
+</div>
 
-<div class="print-wrapper">
+<div class="print-wrapper" id="download-area">
   
   <div class="rc-card">
-    <div class="gov-text">Government of <%= d.stateCode %></div>
+    <div class="gov-text">Government of <%= v.fullState %></div>
     <div class="regn-inline-container">
-      <div class="regn-item"><div class="regn-label">Regn. Number</div><div class="regn-value"><%= d.regNo %></div></div>
-      <div class="regn-item"><div class="regn-label">Date of Regn.</div><div class="regn-value"><%= d.regDate %></div></div>
-      <div class="regn-item" style="margin-left: -10px;">
+      <div class="regn-item"><div class="regn-label">Regn. Number</div><div class="regn-value"><%= v.regNo %></div></div>
+      <div class="regn-item"><div class="regn-label">Date of Regn.</div><div class="regn-value"><%= v.regDate %></div></div>
+      <div class="regn-item" style="margin-left: -10px; position: relative;">
+        <div id="view-cat"><%= v.vCat %></div>
+        <div id="view-state"><%= v.stateCode %></div>
         <div class="regn-label">Regn. Validity</div>
-        <div class="regn-value"><%= d.validity %></div>
+        <div class="regn-value"><%= v.validity %></div>
       </div>
     </div>
     <div class="regn-container">
-      <div class="regn-value-circle"><%= d.serial %></div>
+      <div class="regn-label" style="font-weight:bold; font-size:7pt;">Owner<br>Serial</div>
+      <div class="regn-value-circle"><%= v.serial %></div>
     </div>
     <div class="overlay-front">
-      <div class="overlay-item"><div class="overlay-label">Chassis Number</div><div class="overlay-value"><%= d.chassis %></div></div>
-      <div class="overlay-item"><div class="overlay-label">Engine / Motor Number</div><div class="overlay-value"><%= d.engine %></div></div>
-      <div class="overlay-item"><div class="overlay-label">Owner Name</div><div class="overlay-value"><%= d.owner %></div></div>
-      <div class="overlay-item"><div class="overlay-label">Son / Wife / Daughter of</div><div class="overlay-value"><%= d.swd %></div></div>
-      <div class="overlay-item"><div class="overlay-label">Address</div><div class="overlay-value"><%= d.address %></div></div>
+      <div class="overlay-item"><div class="overlay-label">Chassis Number</div><div class="overlay-value"><%= v.chassis %></div></div>
+      <div class="overlay-item"><div class="overlay-label">Engine / Motor Number</div><div class="overlay-value"><%= v.engine %></div></div>
+      <div class="overlay-item"><div class="overlay-label">Owner Name</div><div class="overlay-value"><%= v.owner %></div></div>
+      <div class="overlay-item"><div class="overlay-label">Son / Wife / Daughter of</div><div class="overlay-value"><%= v.swd %></div></div>
+      <div class="overlay-address-box">
+        <div class="overlay-item"><div class="overlay-label">Address</div><div class="overlay-value"><%= v.address %></div></div>
+      </div>
     </div>
     <div class="left-fields">
-      <div class="field-block"><div class="label">Fuel</div><div class="value"><%= d.fuel %></div></div>
-      <div class="field-block"><div class="label">Emission Norms</div><div class="value"><%= d.norms %></div></div>
+      <div class="field-block"><div class="label">Fuel</div><div class="value"><%= v.fuel %></div></div>
+      <div class="field-block"><div class="label">Emission Norms</div><div class="value"><%= v.norms %></div></div>
     </div>
   </div>
 
   <div class="rc-card-front">  
-    <div class="gov-text-front">VEHICLE CLASS: <%= d.vClass %></div>  
-    <div id="stateCircle"><%= d.stateCode %></div>  
-    <div class="regn-block">  
-      <div class="pair" style="margin-left: 20px;"><div class="regn-label-f">Maker:</div><div class="regn-value-f"><%= d.maker %></div></div>  
-      <div class="pair" style="margin-left: 20px;"><div class="regn-label-f">Model:</div><div class="regn-value-f"><%= d.model %></div></div>  
-      <div class="pair" style="margin-left: 20px;"><div class="regn-label-f">Colour:</div><div class="regn-value-f"><%= d.color %></div></div>
-      <div class="pair" style="margin-left: 20px;"><div class="regn-label-f">Seating Capacity:</div><div class="regn-value-f"><%= d.seating %></div></div>  
-      <div class="pair" style="margin-left: 20px;"><div class="regn-label-f">Unladen Weight:</div><div class="regn-value-f"><%= d.weight %></div></div>  
-      <div class="pair" style="margin-left: 20px;"><div class="regn-label-f">Cubic Cap:</div><div class="regn-value-f"><%= d.cc %></div></div>  
-      <div class="pair" style="margin-left: 20px;"><div class="regn-label-f">Financier:</div><div class="regn-value-f"><%= d.financier %></div></div>  
+    <div class="gov-text-front">VEHICLE CLASS: <%= v.vClass %></div>  
+    <div id="view-cat" style="top:16.96px; left:12.5px;"><%= v.vCat %></div>  
+    <div id="view-state" style="top:16.96px; left:35.0px;"><%= v.stateCode %></div>  
+    <div class="regn-item" style="position: absolute; top: 39px; right: 254px;">  
+      <div class="regn-label-f">Regn. Number</div>  
+      <div class="regn-value-f"><%= v.regNo %></div>  
     </div>  
-    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://vahan.parivahan.gov.in/rcdetails/?regno=<%= d.regNo %>" style="position:absolute; bottom:60px; left:6px; width:22mm; height:22mm;">
-    <div style="position: absolute; bottom: 7px; right: 10px; font-size: 6pt; text-align: center; width: 100px;">Registration Authority<br /><%= d.rto %></div>
+    <div class="regn-block">  
+      <div class="pair" style="margin-left: 20px;"><div class="regn-label-f">Maker:</div><div class="regn-value-f"><%= v.maker %></div></div>  
+      <div class="pair" style="margin-left: 20px;"><div class="regn-label-f">Model:</div><div class="regn-value-f"><%= v.model %></div></div>  
+      <div class="pair" style="margin-left: 20px;"><div style="display: flex; gap: 40px;"><div><div class="regn-label-f">Colour:</div><div class="regn-value-f"><%= v.color %></div></div><div><div class="regn-label-f">/Body Type:</div><div class="regn-value-f"><%= v.body %></div></div></div></div>  
+      <div class="pair" style="margin-left: 20px;"><div class="regn-label-f">Seating Capacity</div><div class="regn-value-f"><%= v.seating %></div></div>  
+      <div class="pair" style="margin-left: 20px;"><div class="regn-label-f">Unladen Weight (Kg)</div><div class="regn-value-f"><%= v.weight %></div></div>  
+      <div class="pair" style="margin-left: 20px;"><div style="display: flex; gap: 4px;"><div style="text-align: left;"><div class="regn-label-f">Cubic Cap.</div><div class="regn-value-f"><%= v.cc %></div></div><div style="text-align: left;"><div class="regn-label-f">/BHP</div><div class="regn-value-f">--</div></div><div style="text-align: left;"><div class="regn-label-f">/Wheel Base</div><div class="regn-value-f"><%= v.wheelbase %></div></div></div></div>  
+      <div class="pair" style="margin-left: 20px;"><div class="regn-label-f">Financier</div><div class="regn-value-f"><%= v.financier %></div></div>  
+    </div>  
+    <div class="left-fields-f">  
+      <div class="field-block"><div class="regn-label-f">Mfg. Year</div><div class="regn-value-f"><%= v.mfg %></div></div>  
+    </div>  
+    <img style="position:absolute; bottom:60px; left:6px; width:22mm; height:22mm; z-index:10;" src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=https://vahan.parivahan.gov.in/rcdetails/?regno=<%= v.regNo %>" alt="QR Code" />
+    <div style="position: absolute; bottom: 7px; right: 10px; font-size: 6.5pt; text-align: center; width: 100px;">Registration Authority<br /><%= v.rto %></div>
   </div>
 
 </div>
+
+<script>
+  function downloadPDF() {
+    const element = document.getElementById('download-area');
+    const opt = {
+      margin: 0,
+      filename: 'RC_<%= v.regNo %>.pdf',
+      image: { type: 'jpeg', quality: 1 },
+      html2canvas: { scale: 4, useCORS: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    html2pdf().set(opt).from(element).save();
+  }
+</script>
 </body>
 </html>
