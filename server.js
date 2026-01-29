@@ -1,24 +1,26 @@
 const express = require('express');
-const axios = require('axios');
 const path = require('path');
+const axios = require('axios');
 const app = express();
+const PORT = process.env.PORT || 3000;
 
-app.use(express.static(__dirname));
+app.use(express.static('public'));
 
-app.get('/fetch-rc', async (req, res) => {
-    const { vNo } = req.query;
+// Proxy route to avoid CORS errors
+app.get('/api/vahan', async (req, res) => {
     try {
-        const apiUrl = `https://rc-pvc-api.vercel.app/?number=${vNo}`;
-        const response = await axios.get(apiUrl);
+        const vNo = req.query.number;
+        const response = await axios.get(`https://rc-pvc-api.vercel.app/?number=${vNo}`);
         res.json(response.data);
     } catch (error) {
-        res.status(500).json({ error: "API connection failed" });
+        res.status(500).json({ status: false, message: "API Connection Error" });
     }
 });
 
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server live on ${PORT}`));
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
