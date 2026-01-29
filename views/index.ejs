@@ -4,15 +4,61 @@
   <meta charset="UTF-8" />
   <title>RC PVC - <%= d.regNo %></title>
   <style>
-    /* Aapka poora CSS yahan (Vaisa hi rahega) */
-    <%= include('../public/style.css') %> /* Aap CSS ko alag file mein bhi rakh sakte hain */
-    
-    /* Security: Text select aur copy disable */
-    body { -webkit-user-select: none; user-select: none; }
-    @media print { .no-print { display: none !important; } }
+    /* 🛠️ CONSOLIDATED PRINT & UI STYLES */
+    @page { size: A4; margin: 0; }
+    @media print {
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      body { background: #fff !important; padding: 0 !important; }
+      .no-print { display: none !important; }
+      .print-wrapper { 
+        display: flex !important; 
+        flex-direction: column !important; 
+        align-items: center !important; 
+        padding-top: 1cm !important; 
+        gap: 0.5cm;
+      }
+      .rc-card { background-image: url('https://iili.io/F3b22uS.png') !important; background-size: 100% 100% !important; }
+      .rc-card-front { background: url('https://iili.io/F3bdyFf.png') center/100% 100% no-repeat !important; }
+    }
+
+    body { background: #f0f2f5; font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; -webkit-user-select: none; user-select: none; }
+    .no-print { margin-bottom: 15px; padding: 12px 30px; background: #28a745; color: white; border: none; cursor: pointer; border-radius: 6px; font-weight: bold; font-size: 16px; }
+
+    /* --- CARD 1 STYLES --- */
+    .rc-card {
+      width: 8.5cm; height: 5.4cm; position: relative; color: #000;
+      background: #fff url('https://iili.io/F3b22uS.png') center/100% 100% no-repeat;
+      overflow: hidden; image-rendering: -webkit-optimize-contrast; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      margin-bottom: 20px;
+    }
+    .gov-text { position: absolute; top: 15.68px; left: 104.3px; font-weight: bold; font-size: 7.5pt; white-space: nowrap; }
+    .regn-inline-container { position: absolute; top: 42px; left: 83px; display: flex; gap: 25px; font-weight: bold; }
+    .regn-label { font-size: 6.8pt; font-weight: bold; }
+    .regn-value { font-size: 7pt; font-weight: normal; }
+    .regn-container { position: absolute; top: 67px; left: 245px; }
+    .regn-value-circle { position: absolute; top: 8px; left: 26px; width: 13px; height: 13px; border: 1.2px solid #000; border-radius: 50%; text-align: center; line-height: 13px; font-weight: bold; font-size: 8pt; }
+    .overlay-front { position: absolute; top: 67px; left: 83px; width: 225px; }
+    .overlay-item { margin-bottom: 3px; }
+    .overlay-label { font-weight: bold; font-size: 6.8pt; }
+    .overlay-value { font-size: 6.2pt; line-height: 1.1; font-weight: normal; word-wrap: break-word; }
+    .left-fields { position: absolute; top: 134px; left: 10px; }
+    .label { font-weight: bold; font-size: 7pt; }
+    .value { font-size: 7pt; font-weight: normal; }
+
+    /* --- CARD 2 STYLES --- */
+    .rc-card-front {  
+      width: 8.56cm; height: 5.4cm; position: relative; font-size: 6.5pt; color: #000;  
+      overflow: hidden; background: url('https://iili.io/F3bdyFf.png') center/100% 100% no-repeat;  
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }  
+    .gov-text-front { position: absolute; top: 13.4px; left: 50%; transform: translateX(-50%); font-weight: bold; font-size: 7.5pt; z-index: 10; white-space: nowrap; }  
+    #stateCircle { position: absolute; top: 16.96px; left: 35.0px; font-size: 6.0pt; font-weight: bold; z-index: 20; }
+    .regn-block { position: absolute; top: 39px; right: 39px; width: 200px; display: flex; flex-direction: column; z-index: 10; }  
+    .regn-label-f { font-size: 6.5pt; font-weight: bold; }  
+    .regn-value-f { font-size: 6.5pt; font-weight: normal; }
+    .pair { margin-bottom: 0.7px; }  
   </style>
   <script>
-    // Security Script: Inspect Element aur Right Click block
     document.addEventListener('contextmenu', e => e.preventDefault());
     document.onkeydown = e => { if(e.keyCode == 123 || (e.ctrlKey && e.shiftKey && e.keyCode == 73)) return false; };
   </script>
@@ -28,15 +74,12 @@
     <div class="regn-inline-container">
       <div class="regn-item"><div class="regn-label">Regn. Number</div><div class="regn-value"><%= d.regNo %></div></div>
       <div class="regn-item"><div class="regn-label">Date of Regn.</div><div class="regn-value"><%= d.regDate %></div></div>
-      <div class="regn-item" style="margin-left: -10px; position: relative;">
-        <div id="view-cat" style="top: -30px;"><%= d.vCat %></div>
-        <div id="view-state" style="top: -30px; left: 60px;"><%= d.stateCode %></div>
+      <div class="regn-item" style="margin-left: -10px;">
         <div class="regn-label">Regn. Validity</div>
         <div class="regn-value"><%= d.validity %></div>
       </div>
     </div>
     <div class="regn-container">
-      <div class="regn-label">Owner<br>Serial</div>
       <div class="regn-value-circle"><%= d.serial %></div>
     </div>
     <div class="overlay-front">
@@ -44,9 +87,7 @@
       <div class="overlay-item"><div class="overlay-label">Engine / Motor Number</div><div class="overlay-value"><%= d.engine %></div></div>
       <div class="overlay-item"><div class="overlay-label">Owner Name</div><div class="overlay-value"><%= d.owner %></div></div>
       <div class="overlay-item"><div class="overlay-label">Son / Wife / Daughter of</div><div class="overlay-value"><%= d.swd %></div></div>
-      <div class="overlay-address-box">
-        <div class="overlay-item"><div class="overlay-label">Address</div><div class="overlay-value"><%= d.address %></div></div>
-      </div>
+      <div class="overlay-item"><div class="overlay-label">Address</div><div class="overlay-value"><%= d.address %></div></div>
     </div>
     <div class="left-fields">
       <div class="field-block"><div class="label">Fuel</div><div class="value"><%= d.fuel %></div></div>
@@ -56,26 +97,17 @@
 
   <div class="rc-card-front">  
     <div class="gov-text-front">VEHICLE CLASS: <%= d.vClass %></div>  
-    <div id="categoryCircle"><%= d.vCat %></div>  
     <div id="stateCircle"><%= d.stateCode %></div>  
-    <div class="regn-item" style="position: absolute; top: 39px; right: 254px;">  
-      <div class="regn-label-f">Regn. Number</div>  
-      <div class="regn-value-f"><%= d.regNo %></div>  
-    </div>  
     <div class="regn-block">  
       <div class="pair" style="margin-left: 20px;"><div class="regn-label-f">Maker:</div><div class="regn-value-f"><%= d.maker %></div></div>  
       <div class="pair" style="margin-left: 20px;"><div class="regn-label-f">Model:</div><div class="regn-value-f"><%= d.model %></div></div>  
-      <div class="pair" style="margin-left: 20px;"><div style="display: flex; gap: 40px;"><div><div class="regn-label-f">Colour:</div><div class="regn-value-f"><%= d.color %></div></div><div><div class="regn-label-f">/Body Type:</div><div class="regn-value-f"><%= d.body %></div></div></div></div>  
-      <div class="pair" style="margin-left: 20px;"><div class="regn-label-f">Seating Capacity</div><div class="regn-value-f"><%= d.seating %></div></div>  
-      <div class="pair" style="margin-left: 20px;"><div class="regn-label-f">Unladen Weight (Kg)</div><div class="regn-value-f"><%= d.weight %></div></div>  
-      <div class="pair" style="margin-left: 20px;"><div style="display: flex; gap: 4px;"><div><div class="regn-label-f">Cubic Cap.</div><div class="regn-value-f"><%= d.cc %></div></div><div><div class="regn-label-f">/Horse Power</div><div class="regn-value-f">--</div></div><div><div class="regn-label-f">/Wheel Base</div><div class="regn-value-f"><%= d.wheelbase %></div></div></div></div>  
-      <div class="pair" style="margin-left: 20px;"><div class="regn-label-f">Financier</div><div class="regn-value-f"><%= d.financier %></div></div>  
+      <div class="pair" style="margin-left: 20px;"><div class="regn-label-f">Colour:</div><div class="regn-value-f"><%= d.color %></div></div>
+      <div class="pair" style="margin-left: 20px;"><div class="regn-label-f">Seating Capacity:</div><div class="regn-value-f"><%= d.seating %></div></div>  
+      <div class="pair" style="margin-left: 20px;"><div class="regn-label-f">Unladen Weight:</div><div class="regn-value-f"><%= d.weight %></div></div>  
+      <div class="pair" style="margin-left: 20px;"><div class="regn-label-f">Cubic Cap:</div><div class="regn-value-f"><%= d.cc %></div></div>  
+      <div class="pair" style="margin-left: 20px;"><div class="regn-label-f">Financier:</div><div class="regn-value-f"><%= d.financier %></div></div>  
     </div>  
-    <div class="left-fields-f">  
-      <div class="field-block"><div class="regn-label-f">Year of Mfg.</div><div class="regn-value-f"><%= d.mfg %></div></div>  
-      <div class="field-block"><div class="regn-label-f">No. of Cylinders:</div><div class="regn-value-f">--</div></div>  
-    </div>  
-    <img id="qrCodeImg" src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://vahan.parivahan.gov.in/rcdetails/?regno=<%= d.regNo %>" style="position:absolute; bottom:60px; left:6px; width:22mm; height:22mm;">
+    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://vahan.parivahan.gov.in/rcdetails/?regno=<%= d.regNo %>" style="position:absolute; bottom:60px; left:6px; width:22mm; height:22mm;">
     <div style="position: absolute; bottom: 7px; right: 10px; font-size: 6pt; text-align: center; width: 100px;">Registration Authority<br /><%= d.rto %></div>
   </div>
 
