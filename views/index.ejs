@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>RC PVC - <%= d.regNo %></title>
+  <style>
+    /* Aapka poora CSS yahan (Vaisa hi rahega) */
+    <%= include('../public/style.css') %> /* Aap CSS ko alag file mein bhi rakh sakte hain */
+    
+    /* Security: Text select aur copy disable */
+    body { -webkit-user-select: none; user-select: none; }
+    @media print { .no-print { display: none !important; } }
+  </style>
+  <script>
+    // Security Script: Inspect Element aur Right Click block
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.onkeydown = e => { if(e.keyCode == 123 || (e.ctrlKey && e.shiftKey && e.keyCode == 73)) return false; };
+  </script>
+</head>
+<body>
+
+<button class="no-print" onclick="window.print()">Print Both Cards / Save PDF</button>
+
+<div class="print-wrapper">
+  
+  <div class="rc-card">
+    <div class="gov-text">Government of <%= d.stateCode %></div>
+    <div class="regn-inline-container">
+      <div class="regn-item"><div class="regn-label">Regn. Number</div><div class="regn-value"><%= d.regNo %></div></div>
+      <div class="regn-item"><div class="regn-label">Date of Regn.</div><div class="regn-value"><%= d.regDate %></div></div>
+      <div class="regn-item" style="margin-left: -10px; position: relative;">
+        <div id="view-cat" style="top: -30px;"><%= d.vCat %></div>
+        <div id="view-state" style="top: -30px; left: 60px;"><%= d.stateCode %></div>
+        <div class="regn-label">Regn. Validity</div>
+        <div class="regn-value"><%= d.validity %></div>
+      </div>
+    </div>
+    <div class="regn-container">
+      <div class="regn-label">Owner<br>Serial</div>
+      <div class="regn-value-circle"><%= d.serial %></div>
+    </div>
+    <div class="overlay-front">
+      <div class="overlay-item"><div class="overlay-label">Chassis Number</div><div class="overlay-value"><%= d.chassis %></div></div>
+      <div class="overlay-item"><div class="overlay-label">Engine / Motor Number</div><div class="overlay-value"><%= d.engine %></div></div>
+      <div class="overlay-item"><div class="overlay-label">Owner Name</div><div class="overlay-value"><%= d.owner %></div></div>
+      <div class="overlay-item"><div class="overlay-label">Son / Wife / Daughter of</div><div class="overlay-value"><%= d.swd %></div></div>
+      <div class="overlay-address-box">
+        <div class="overlay-item"><div class="overlay-label">Address</div><div class="overlay-value"><%= d.address %></div></div>
+      </div>
+    </div>
+    <div class="left-fields">
+      <div class="field-block"><div class="label">Fuel</div><div class="value"><%= d.fuel %></div></div>
+      <div class="field-block"><div class="label">Emission Norms</div><div class="value"><%= d.norms %></div></div>
+    </div>
+  </div>
+
+  <div class="rc-card-front">  
+    <div class="gov-text-front">VEHICLE CLASS: <%= d.vClass %></div>  
+    <div id="categoryCircle"><%= d.vCat %></div>  
+    <div id="stateCircle"><%= d.stateCode %></div>  
+    <div class="regn-item" style="position: absolute; top: 39px; right: 254px;">  
+      <div class="regn-label-f">Regn. Number</div>  
+      <div class="regn-value-f"><%= d.regNo %></div>  
+    </div>  
+    <div class="regn-block">  
+      <div class="pair" style="margin-left: 20px;"><div class="regn-label-f">Maker:</div><div class="regn-value-f"><%= d.maker %></div></div>  
+      <div class="pair" style="margin-left: 20px;"><div class="regn-label-f">Model:</div><div class="regn-value-f"><%= d.model %></div></div>  
+      <div class="pair" style="margin-left: 20px;"><div style="display: flex; gap: 40px;"><div><div class="regn-label-f">Colour:</div><div class="regn-value-f"><%= d.color %></div></div><div><div class="regn-label-f">/Body Type:</div><div class="regn-value-f"><%= d.body %></div></div></div></div>  
+      <div class="pair" style="margin-left: 20px;"><div class="regn-label-f">Seating Capacity</div><div class="regn-value-f"><%= d.seating %></div></div>  
+      <div class="pair" style="margin-left: 20px;"><div class="regn-label-f">Unladen Weight (Kg)</div><div class="regn-value-f"><%= d.weight %></div></div>  
+      <div class="pair" style="margin-left: 20px;"><div style="display: flex; gap: 4px;"><div><div class="regn-label-f">Cubic Cap.</div><div class="regn-value-f"><%= d.cc %></div></div><div><div class="regn-label-f">/Horse Power</div><div class="regn-value-f">--</div></div><div><div class="regn-label-f">/Wheel Base</div><div class="regn-value-f"><%= d.wheelbase %></div></div></div></div>  
+      <div class="pair" style="margin-left: 20px;"><div class="regn-label-f">Financier</div><div class="regn-value-f"><%= d.financier %></div></div>  
+    </div>  
+    <div class="left-fields-f">  
+      <div class="field-block"><div class="regn-label-f">Year of Mfg.</div><div class="regn-value-f"><%= d.mfg %></div></div>  
+      <div class="field-block"><div class="regn-label-f">No. of Cylinders:</div><div class="regn-value-f">--</div></div>  
+    </div>  
+    <img id="qrCodeImg" src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://vahan.parivahan.gov.in/rcdetails/?regno=<%= d.regNo %>" style="position:absolute; bottom:60px; left:6px; width:22mm; height:22mm;">
+    <div style="position: absolute; bottom: 7px; right: 10px; font-size: 6pt; text-align: center; width: 100px;">Registration Authority<br /><%= d.rto %></div>
+  </div>
+
+</div>
+</body>
+</html>
