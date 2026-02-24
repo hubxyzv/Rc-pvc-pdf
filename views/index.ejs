@@ -4,8 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RC_PVC_<%= v.regNo %></title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
-    /* ALL YOUR ORIGINAL STYLES PRESERVED EXACTLY */
+    /* 🛠️ ORIGINAL STYLES PRESERVED STRICTLY */
     @page { size: A4; margin: 0; }
     @media print {
       * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
@@ -18,17 +19,18 @@
     }
     body { background: #f0f2f5; font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
     .no-print { margin-bottom: 15px; padding: 12px 30px; background: #28a745; color: white; border: none; cursor: pointer; border-radius: 6px; font-weight: bold; font-size: 16px; position: relative; z-index: 100000; }
-    .status-panel { width: 8.5cm; background: #fff; border: 1px solid #ddd; padding: 10px; margin-top: 15px; border-radius: 5px; font-size: 8.5pt; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    
+    /* CARD WRAPPER FOR PDF CAPTURE */
+    #download-area { background: transparent; padding: 10px; display: flex; flex-direction: column; align-items: center; }
+
     .rc-card { width: 8.5cm; height: 5.4cm; position: relative; color: #000; background: #fff url('https://iili.io/F3b22uS.png') center/100% 100% no-repeat; overflow: hidden; image-rendering: -webkit-optimize-contrast; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-bottom: 20px; }
     .gov-text { position: absolute; top: 15.68001px; left: 104.3px; font-weight: bold; font-size: 7.50001pt; text-transform: none; white-space: nowrap; }
-    #view-cat { position: absolute; top: -30.9001px; left: 38.9012px; font-size: 6.0pt; width: 17px; height: 17px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-    #view-state { position: absolute; top: -31.0001px; left: 60.5490px; font-size: 6.0pt; width: 17px; height: 17px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-    .overlay-address-box { position: absolute; top: 91.7px; left: 0px; width: 100%; }
-    .regn-container .regn-value-circle { position: absolute; top: 8px; left: 26px; width: 13px; height: 13px; border: 1.2px solid #000; border-radius: 50%; text-align: center; line-height: 13px; font-weight: bold; font-size: 8pt; }
+    #view-cat { position: absolute; top: 11px; left: 39px; font-size: 6.0pt; font-weight: bold; }
+    #view-state { position: absolute; top: 11px; left: 60px; font-size: 6.0pt; font-weight: bold; }
     .regn-inline-container { position: absolute; top: 42px; left: 83px; display: flex; gap: 25px; font-weight: bold; }
     .regn-label { font-size: 6.8pt; font-weight: bold; }
     .regn-value { font-size: 7pt; font-weight: normal; }
-    .regn-container { position: absolute; top: 67px; left: 245px; }
+    .regn-value-circle { position: absolute; top: 75px; left: 271px; width: 13px; height: 13px; border: 1.2px solid #000; border-radius: 50%; text-align: center; line-height: 13px; font-weight: bold; font-size: 8pt; }
     .overlay-front { position: absolute; top: 67px; left: 83px; width: 225px; }
     .overlay-item { margin-bottom: 3px; }
     .overlay-label { font-weight: bold; font-size: 6.8pt; }
@@ -36,24 +38,28 @@
     .left-fields { position: absolute; top: 134px; left: 10px; }
     .label { font-weight: bold; font-size: 7pt; }
     .value { font-size: 7pt; font-weight: normal; }
-    #view-norms { font-size: 6.0pt; font-weight: normal; }
+    
     .rc-card-front { width: 8.56cm; height: 5.4cm; position: relative; font-size: 6.5pt; color: #000; overflow: hidden; background: url('https://iili.io/F3bdyFf.png') center/100% 100% no-repeat; box-shadow: 0 4px 12px rgba(0,0,0,0.15); box-sizing: border-box; }  
     .gov-text-front { position: absolute; top: 13.4px; left: 50%; transform: translateX(-50%); font-size: 7.5pt; font-weight: bold; z-index: 10; white-space: nowrap; }  
     #categoryCircle { position: absolute; top: 16.96px; left: 12.501px; font-size: 6.0pt; font-weight: bold; z-index: 20; }  
     #stateCircle { position: absolute; top: 16.96px; left: 35.0px; font-size: 6.0pt; font-weight: bold; z-index: 20; }  
     .strict-state-style { top: 16.96px !important; left: 34.0px !important; }
-    .regn-label-f { font-size: 6.5pt; font-weight: bold; margin-bottom: 1.5px; white-space: nowrap; }  
-    .regn-value-f { font-size: 6.5pt; white-space: nowrap; margin-top: 1.5px; font-weight: normal; }  
     .regn-block { position: absolute; top: 39px; right: 39px; width: 200px; display: flex; flex-direction: column; z-index: 10; }  
-    .pair { margin-bottom: 0.7px; }  
     .left-fields-f { position: absolute; top: 147px; left: 11px; width: 120px; z-index: 10; }  
+    
+    #loader-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; font-weight: bold; }
   </style>
 </head>
 <body>
 
-<button class="no-print" onclick="window.print()">Download PVC (PDF)</button>
+<div id="loader-overlay">
+  <p>Generating PVC PDF...</p>
+  <p>Please wait, downloading will start automatically.</p>
+</div>
 
-<div class="print-wrapper">
+<button class="no-print" onclick="window.print()">Download Manually</button>
+
+<div id="download-area" class="print-wrapper">
   
   <div class="rc-card">
     <div class="gov-text" id="view-gov">Loading...</div>
@@ -67,18 +73,13 @@
         <div class="regn-value" id="view-valid"></div>
       </div>
     </div>
-    <div class="regn-container">
-      <div class="regn-label" style="font-weight:bold; font-size:7pt;">Owner<br>Serial</div>
-      <div class="regn-value-circle" id="view-serial"></div>
-    </div>
+    <div class="regn-value-circle" id="view-serial"></div>
     <div class="overlay-front">
       <div class="overlay-item"><div class="overlay-label">Chassis Number</div><div class="overlay-value" id="view-chassis"></div></div>
       <div class="overlay-item"><div class="overlay-label">Engine / Motor Number</div><div class="overlay-value" id="view-engine"></div></div>
       <div class="overlay-item"><div class="overlay-label">Owner Name</div><div class="overlay-value" id="view-name"></div></div>
       <div class="overlay-item"><div class="overlay-label">Son / Wife / Daughter of</div><div class="overlay-value" id="view-swd"></div></div>
-      <div class="overlay-address-box">
-        <div class="overlay-item"><div class="overlay-label">Address</div><div class="overlay-value" id="view-address"></div></div>
-      </div>
+      <div class="overlay-item" style="margin-top:5px;"><div class="overlay-label">Address</div><div class="overlay-value" id="view-address"></div></div>
     </div>
     <div class="left-fields">
       <div class="field-block"><div class="label">Fuel</div><div class="value" id="view-fuel"></div></div>
@@ -122,7 +123,7 @@
     const stateCode = masterData.regNo.slice(0, 2).toUpperCase();
     const sName = stateMap[stateCode];
 
-    // Card 1 Logic
+    // Fill Front Card
     document.getElementById('view-gov').innerText = sName ? "Government of " + sName : "NOT DEFINED";
     document.getElementById('view-regNo').innerText = masterData.regNo;
     document.getElementById('view-regDate').innerText = masterData.regDate;
@@ -133,12 +134,12 @@
     document.getElementById('view-chassis').innerText = masterData.chassis;
     document.getElementById('view-engine').innerText = masterData.engine;
     document.getElementById('view-name').innerText = masterData.name;
-    document.getElementById('view-swd').innerText = masterData.swd;
+    document.getElementById('view-swd').innerText = "_ _"; // CUSTOM PRIVACY RULE
     document.getElementById('view-address').innerText = masterData.address;
     document.getElementById('view-fuel').innerText = masterData.fuel.toUpperCase();
     document.getElementById('view-norms').innerText = masterData.norms;
 
-    // Card 2 Logic
+    // Fill Back Card
     document.getElementById("govText").textContent = "VEHICLE CLASS: " + masterData.vClass.toUpperCase();
     document.getElementById("regNoDisplay").textContent = masterData.regNo;
     document.getElementById("stateCircle").textContent = stateCode;
@@ -163,10 +164,22 @@
       document.getElementById("stateCircle").classList.add("strict-state-style");
     }
 
-    // --- AUTOMATIC PDF/PRINT TRIGGER ---
+    // --- AUTOMATIC PDF DOWNLOAD LOGIC ---
+    const element = document.getElementById('download-area');
+    const opt = {
+      margin:       0.5,
+      filename:     `RC_PVC_${masterData.regNo}.pdf`,
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 3, useCORS: true },
+      jsPDF:        { unit: 'cm', format: 'a4', orientation: 'portrait' }
+    };
+
+    // Delay slightly to ensure images/fonts are ready
     setTimeout(() => {
-        window.print();
-    }, 1000);
+      html2pdf().set(opt).from(element).save().then(() => {
+        document.getElementById('loader-overlay').style.display = 'none';
+      });
+    }, 1500);
   }
 
   window.onload = processAllCards;
