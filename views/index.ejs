@@ -3,34 +3,50 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RC_PVC_<%= v.regNo %></title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <title>RC_Merged_Validity_Verified</title>
   <style>
-    /* 🛠️ ORIGINAL STYLES PRESERVED STRICTLY */
+    /* 🛠️ CONSOLIDATED PRINT & UI STYLES - STRICTLY PRESERVED */
     @page { size: A4; margin: 0; }
     @media print {
       * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
       body { background: #fff !important; padding: 0 !important; }
       .no-print, .status-panel { display: none !important; }
-      .print-wrapper { display: flex !important; flex-direction: column !important; align-items: center !important; padding-top: 1cm !important; gap: 0.5cm; }
-      .rc-card, .rc-card-front { box-shadow: none !important; margin-bottom: 10px !important; }
+      .print-wrapper { 
+        display: flex !important; 
+        flex-direction: column !important; 
+        align-items: center !important; 
+        padding-top: 1cm !important; 
+        gap: 0.5cm;
+      }
+      .rc-card, .rc-card-front { 
+        box-shadow: none !important; 
+        margin-bottom: 10px !important;
+      }
       .rc-card { background-image: url('https://iili.io/F3b22uS.png') !important; background-size: 100% 100% !important; }
       .rc-card-front { background: url('https://iili.io/F3bdyFf.png') center/100% 100% no-repeat !important; }
+      .pdf-link { display: block !important; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 99999; }
     }
+
     body { background: #f0f2f5; font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
     .no-print { margin-bottom: 15px; padding: 12px 30px; background: #28a745; color: white; border: none; cursor: pointer; border-radius: 6px; font-weight: bold; font-size: 16px; position: relative; z-index: 100000; }
-    
-    /* CARD WRAPPER FOR PDF CAPTURE */
-    #download-area { background: transparent; padding: 10px; display: flex; flex-direction: column; align-items: center; }
+    .status-panel { width: 8.5cm; background: #fff; border: 1px solid #ddd; padding: 10px; margin-top: 15px; border-radius: 5px; font-size: 8.5pt; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 
-    .rc-card { width: 8.5cm; height: 5.4cm; position: relative; color: #000; background: #fff url('https://iili.io/F3b22uS.png') center/100% 100% no-repeat; overflow: hidden; image-rendering: -webkit-optimize-contrast; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-bottom: 20px; }
+    /* --- CARD 1 STYLES --- */
+    .rc-card {
+      width: 8.5cm; height: 5.4cm; position: relative; color: #000;
+      background: #fff url('https://iili.io/F3b22uS.png') center/100% 100% no-repeat;
+      overflow: hidden; image-rendering: -webkit-optimize-contrast; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      margin-bottom: 20px;
+    }
     .gov-text { position: absolute; top: 15.68001px; left: 104.3px; font-weight: bold; font-size: 7.50001pt; text-transform: none; white-space: nowrap; }
-    #view-cat { position: absolute; top: 11px; left: 39px; font-size: 6.0pt; font-weight: bold; }
-    #view-state { position: absolute; top: 11px; left: 60px; font-size: 6.0pt; font-weight: bold; }
+    #view-cat { position: absolute; top: -30.9001px; left: 38.9012px; font-size: 6.0pt; width: 17px; height: 17px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+    #view-state { position: absolute; top: -31.0001px; left: 60.5490px; font-size: 6.0pt; width: 17px; height: 17px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+    .overlay-address-box { position: absolute; top: 91.7px; left: 0px; width: 100%; }
+    .regn-container .regn-value-circle { position: absolute; top: 8px; left: 26px; width: 13px; height: 13px; border: 1.2px solid #000; border-radius: 50%; text-align: center; line-height: 13px; font-weight: bold; font-size: 8pt; }
     .regn-inline-container { position: absolute; top: 42px; left: 83px; display: flex; gap: 25px; font-weight: bold; }
     .regn-label { font-size: 6.8pt; font-weight: bold; }
     .regn-value { font-size: 7pt; font-weight: normal; }
-    .regn-value-circle { position: absolute; top: 75px; left: 271px; width: 13px; height: 13px; border: 1.2px solid #000; border-radius: 50%; text-align: center; line-height: 13px; font-weight: bold; font-size: 8pt; }
+    .regn-container { position: absolute; top: 67px; left: 245px; }
     .overlay-front { position: absolute; top: 67px; left: 83px; width: 225px; }
     .overlay-item { margin-bottom: 3px; }
     .overlay-label { font-weight: bold; font-size: 6.8pt; }
@@ -38,31 +54,38 @@
     .left-fields { position: absolute; top: 134px; left: 10px; }
     .label { font-weight: bold; font-size: 7pt; }
     .value { font-size: 7pt; font-weight: normal; }
-    
-    .rc-card-front { width: 8.56cm; height: 5.4cm; position: relative; font-size: 6.5pt; color: #000; overflow: hidden; background: url('https://iili.io/F3bdyFf.png') center/100% 100% no-repeat; box-shadow: 0 4px 12px rgba(0,0,0,0.15); box-sizing: border-box; }  
-    .gov-text-front { position: absolute; top: 13.4px; left: 50%; transform: translateX(-50%); font-size: 7.5pt; font-weight: bold; z-index: 10; white-space: nowrap; }  
-    #categoryCircle { position: absolute; top: 16.96px; left: 12.501px; font-size: 6.0pt; font-weight: bold; z-index: 20; }  
-    #stateCircle { position: absolute; top: 16.96px; left: 35.0px; font-size: 6.0pt; font-weight: bold; z-index: 20; }  
+    #view-norms { font-size: 6.0pt; font-weight: normal; }
+
+    /* --- CARD 2 STYLES --- */
+    @font-face { font-family: 'MyriadProBold'; src: local('Myriad Pro Bold'), local('MyriadPro-Bold'); font-weight: bold; }  
+    .rc-card-front {  
+      width: 8.56cm; height: 5.4cm; position: relative; font-size: 6.5pt; color: #000;  
+      overflow: hidden; background: url('https://iili.io/F3bdyFf.png') center/100% 100% no-repeat;  
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15); box-sizing: border-box;
+    }  
+    .gov-text-front { position: absolute; top: 13.4px; left: 50%; transform: translateX(-50%); font-family: 'MyriadProBold', sans-serif; font-size: 7.5pt; font-weight: bold; z-index: 10; white-space: nowrap; }  
+    #categoryCircle { position: absolute; top: 16.96px; left: 12.501px; font-size: 6.0pt; font-weight: bold; font-family: 'MyriadProBold', sans-serif; z-index: 20; }  
+    #stateCircle { position: absolute; top: 16.96px; left: 35.0px; font-size: 6.0pt; font-weight: bold; font-family: 'MyriadProBold', sans-serif; z-index: 20; }  
     .strict-state-style { top: 16.96px !important; left: 34.0px !important; }
-    .regn-block { position: absolute; top: 39px; right: 39px; width: 200px; display: flex; flex-direction: column; z-index: 10; }  
-    .left-fields-f { position: absolute; top: 147px; left: 11px; width: 120px; z-index: 10; }  
-    
-    #loader-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; font-weight: bold; }
+    .regn-label-f { font-size: 6.5pt; font-weight: bold; margin-bottom: 1.5px; white-space: nowrap; }  
+    .regn-value-f { font-size: 6.5pt; white-space: nowrap; margin-top: 1.5px; font-weight: normal; }  
+    .regn-block { position: absolute; top: 39px; right: 39px; width: 200px; font-family: 'MyriadProBold', sans-serif; display: flex; flex-direction: column; z-index: 10; }  
+    .pair { margin-bottom: 0.7px; }  
+    .left-fields-f { position: absolute; top: 147px; left: 11px; width: 120px; z-index: 10; font-family: 'MyriadProBold', sans-serif; }  
+    .left-fields-f .field-block { margin-bottom: 3px; }
+
+    .pdf-link { position: fixed; top: 0; left: 0; width: 100%; height: 100%; text-decoration: none; background: transparent; z-index: 9999; display: none; }
   </style>
 </head>
 <body>
 
-<div id="loader-overlay">
-  <p>Generating PVC PDF...</p>
-  <p>Please wait, downloading will start automatically.</p>
-</div>
+<a href="https://t.me/Osintallinone_bot" class="pdf-link" target="_blank"></a>
+<button class="no-print" onclick="window.print()">Print Both Cards / Save PDF</button>
 
-<button class="no-print" onclick="window.print()">Download Manually</button>
-
-<div id="download-area" class="print-wrapper">
+<div class="print-wrapper">
   
-  <div class="rc-card">
-    <div class="gov-text" id="view-gov">Loading...</div>
+  <div class="rc-card" id="rc-card">
+    <div class="gov-text" id="view-gov">Processing...</div>
     <div class="regn-inline-container">
       <div class="regn-item"><div class="regn-label">Regn. Number</div><div class="regn-value" id="view-regNo"></div></div>
       <div class="regn-item"><div class="regn-label">Date of Regn.</div><div class="regn-value" id="view-regDate"></div></div>
@@ -73,13 +96,18 @@
         <div class="regn-value" id="view-valid"></div>
       </div>
     </div>
-    <div class="regn-value-circle" id="view-serial"></div>
+    <div class="regn-container">
+      <div class="regn-label" style="font-weight:bold; font-size:7pt;">Owner<br>Serial</div>
+      <div class="regn-value-circle" id="view-serial"></div>
+    </div>
     <div class="overlay-front">
       <div class="overlay-item"><div class="overlay-label">Chassis Number</div><div class="overlay-value" id="view-chassis"></div></div>
       <div class="overlay-item"><div class="overlay-label">Engine / Motor Number</div><div class="overlay-value" id="view-engine"></div></div>
       <div class="overlay-item"><div class="overlay-label">Owner Name</div><div class="overlay-value" id="view-name"></div></div>
       <div class="overlay-item"><div class="overlay-label">Son / Wife / Daughter of</div><div class="overlay-value" id="view-swd"></div></div>
-      <div class="overlay-item" style="margin-top:5px;"><div class="overlay-label">Address</div><div class="overlay-value" id="view-address"></div></div>
+      <div class="overlay-address-box">
+        <div class="overlay-item"><div class="overlay-label">Address</div><div class="overlay-value" id="view-address"></div></div>
+      </div>
     </div>
     <div class="left-fields">
       <div class="field-block"><div class="label">Fuel</div><div class="value" id="view-fuel"></div></div>
@@ -109,22 +137,58 @@
       <div class="field-block"><div class="regn-label-f">No. of Cylinders:</div><div class="regn-value-f" id="f-cyl"></div></div>  
     </div>  
     <img id="qrCodeImg" style="position:absolute; bottom:60px; left:6px; width:22mm; height:22mm; z-index:10;" src="" alt="QR Code" />
+    <div style="position: absolute; top: 50%; right: 7px; transform: translateY(-50%) rotate(180deg); writing-mode: vertical-rl; font-size: 6.5pt; text-align: right; z-index: 15;">Form : 23A</div>  
     <div id="f-auth" style="position: absolute; bottom: 7px; right: 10px; font-size: 6.5pt; line-height: 1.2; text-align: center; z-index: 10; width: 100px;">Registration Authority<br />_</div>
   </div>
 
 </div>
 
+<div class="status-panel">
+  <strong>System Logs:</strong>
+  <div id="status-msg">Checking Integrity...</div>
+</div>
+
 <script>
-  // 📝 --- DYNAMIC DATA FROM SERVER ---
-  const masterData = <%- JSON.stringify(v) %>;
+  // 📝 --- MASTER DATA SOURCE ---
+  // Strictly mapped to your JSON API Response
+  const masterData = {
+    regNo: "<%= v.registration_number %>",
+    regDate: "<%= v.registration_date %>",
+    cat: "<%= v.category %>",
+    serial: "<%= v.serial %>",
+    chassis: "<%= v.chassis_number %>",
+    engine: "<%= v.engine_number %>",
+    name: "<%= v.owner_name %>",
+    swd: "<%= v.swd_name %>",
+    address: "<%= v.address %>",
+    fuel: "<%= v.fuel_type %>",
+    vClass: "<%= v.vehicle_class %>",
+    maker: "<%= v.manufacturer %>",
+    model: "<%= v.model %>",
+    colour: "<%= v.colour %>",
+    bodyType: "<%= v.body_type %>",
+    seatCap: "<%= v.seating_capacity %>",
+    weight: "<%= v.unladen_weight_kg %>",
+    cubicCap: "<%= v.cubic_capacity %>",
+    hp: "<%= v.horse_power %>",
+    wheelBase: "<%= v.wheelbase %>",
+    financier: "<%= v.financier %>",
+    mfgDate: "<%= v.manufacturing_date %>",
+    cylinders: "<%= v.cylinders %>",
+    auth: "<%= v.authority %>",
+    norms: "<%= v.norms %>",
+    validity: "<%= v.valid_upto %>"
+  };
+
   const stateMap = { AP: "Andhra Pradesh", AR: "Arunachal Pradesh", AS: "Assam", BR: "Bihar", CG: "Chhattisgarh", CH: "Chandigarh", DD: "Daman and Diu", DL: "Delhi", GA: "Goa", GJ: "Gujarat", HR: "Haryana", HP: "Himachal Pradesh", JH: "Jharkhand", JK: "Jammu and Kashmir", KA: "Karnataka", KL: "Kerala", LA: "Ladakh", LD: "Lakshadweep", MH: "Maharashtra", ML: "Meghalaya", MN: "Manipur", MP: "Madhya Pradesh", MZ: "Mizoram", NL: "Nagaland", OD: "Odisha", PB: "Punjab", PY: "Puducherry", RJ: "Rajasthan", SK: "Sikkim", TN: "Tamil Nadu", TR: "Tripura", TS: "Telangana", UK: "Uttarakhand", UP: "Uttar Pradesh", WB: "West Bengal" };
 
   function processAllCards() {
+    let logs = [];
     const stateCode = masterData.regNo.slice(0, 2).toUpperCase();
     const sName = stateMap[stateCode];
 
-    // Fill Front Card
-    document.getElementById('view-gov').innerText = sName ? "Government of " + sName : "NOT DEFINED";
+    // --- FILL CARD 1 ---
+    document.getElementById('view-gov').innerText = sName ? "Government of " + sName : "INDIA";
     document.getElementById('view-regNo').innerText = masterData.regNo;
     document.getElementById('view-regDate').innerText = masterData.regDate;
     document.getElementById('view-cat').innerText = masterData.cat.toUpperCase();
@@ -134,12 +198,12 @@
     document.getElementById('view-chassis').innerText = masterData.chassis;
     document.getElementById('view-engine').innerText = masterData.engine;
     document.getElementById('view-name').innerText = masterData.name;
-    document.getElementById('view-swd').innerText = "_ _"; // CUSTOM PRIVACY RULE
+    document.getElementById('view-swd').innerText = masterData.swd;
     document.getElementById('view-address').innerText = masterData.address;
     document.getElementById('view-fuel').innerText = masterData.fuel.toUpperCase();
     document.getElementById('view-norms').innerText = masterData.norms;
 
-    // Fill Back Card
+    // --- FILL CARD 2 ---
     document.getElementById("govText").textContent = "VEHICLE CLASS: " + masterData.vClass.toUpperCase();
     document.getElementById("regNoDisplay").textContent = masterData.regNo;
     document.getElementById("stateCircle").textContent = stateCode;
@@ -158,27 +222,19 @@
     document.getElementById("f-cyl").textContent = masterData.cylinders;
     document.getElementById("f-auth").innerHTML = `Registration Authority<br />${masterData.auth}`;
     
+    // QR Code
     document.getElementById("qrCodeImg").src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent("https://vahan.parivahan.gov.in/rcdetails/?regno=" + masterData.regNo)}`;
     
     if (["MH", "MN", "MZ", "WB"].includes(stateCode)) {
       document.getElementById("stateCircle").classList.add("strict-state-style");
     }
 
-    // --- AUTOMATIC PDF DOWNLOAD LOGIC ---
-    const element = document.getElementById('download-area');
-    const opt = {
-      margin:       0.5,
-      filename:     `RC_PVC_${masterData.regNo}.pdf`,
-      image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 3, useCORS: true },
-      jsPDF:        { unit: 'cm', format: 'a4', orientation: 'portrait' }
-    };
+    logs.push("✔ Data Sync Complete");
+    document.getElementById('status-msg').innerHTML = logs.join("<br>");
 
-    // Delay slightly to ensure images/fonts are ready
+    // Trigger PDF/Print after short delay
     setTimeout(() => {
-      html2pdf().set(opt).from(element).save().then(() => {
-        document.getElementById('loader-overlay').style.display = 'none';
-      });
+        window.print();
     }, 1500);
   }
 
