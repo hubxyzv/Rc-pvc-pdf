@@ -11,46 +11,43 @@ const stateMap = { AP: "Andhra Pradesh", AR: "Arunachal Pradesh", AS: "Assam", B
 app.get('/rc/:vno', async (req, res) => {
     try {
         const vno = req.params.vno.toUpperCase();
-        const response = await axios.get(`https://rc-pvc-api.vercel.app/?number=${vno}`);
-        const raw = response.data.formatted_data;
-        const extract = (regex) => (raw.match(regex) ? raw.match(regex)[1].trim() : "--");
+        // Calling your NEW Render API
+        const response = await axios.get(`https://prerc-pvc-api.onrender.com/rc?id=${vno}`);
+        const data = response.data;
 
-        // NT vs TP Logic
-        const isTransport = raw.includes("TRANSPORT") && !raw.includes("NON-TRANSPORT");
-        const statusType = isTransport ? "TP" : "NT";
-
-        const sc = extract(/STATE CODE: (.*)/) || vno.substring(0, 2);
+        // Creating the master object for the EJS template
         const v = {
-            regNo: response.data.vehicle_no || vno,
-            regDate: extract(/REGISTRATION DATE: (.*)/),
-            validity: extract(/REGISTRATION VALIDITY: (.*)/),
-            stateCode: sc,
-            fullState: stateMap[sc] || sc,
-            owner: extract(/OWNER NAME: (.*)/),
-            serial: extract(/OWNER SERIAL: (.*)/),
-            address: extract(/PERMANENT ADDRESS: (.*)/),
-            chassis: extract(/CHASSIS NUMBER: (.*)/),
-            engine: extract(/ENGINE \/ MOTOR NUMBER: (.*)/),
-            vClass: extract(/VEHICLE CLASS: (.*)/),
-            vCat: statusType, // Strictly NT or TP
-            maker: extract(/MAKER NAME: (.*)/),
-            model: extract(/MODEL NAME: (.*)/),
-            body: extract(/BODY TYPE: (.*)/),
-            fuel: extract(/FUEL TYPE: (.*)/),
-            norms: extract(/EMISSION NORMS: (.*)/),
-            mfg: extract(/MANUFACTURING YEAR: (.*)/),
-            seating: extract(/SEATING CAPACITY: (.*)/),
-            weight: extract(/UNLADEN WEIGHT: (.*)/),
-            cc: extract(/CUBIC CAPACITY \(CC\): (.*)/),
-            wheelbase: extract(/WHEEL BASE: (.*)/),
-            color: extract(/COLOR: (.*)/),
-            financier: extract(/FINANCIER NAME: (.*)/),
-            rto: extract(/RTO AUTHORITY: (.*)/).split(',')[0],
-            swd: extract(/SON \/ WIFE \/ DAUGHTER OF: (.*)/)
+            regNo: data.regNo || vno,
+            regDate: data.regDate || "_",
+            cat: data.cat || "NT",
+            serial: data.serial || "1",
+            chassis: data.chassis || "_",
+            engine: data.engine || "_",
+            name: data.name || "_",
+            swd: "_ _", // Strict privacy constraint
+            address: data.address || "_",
+            fuel: data.fuel || "_",
+            vClass: data.vClass || "_",
+            maker: data.maker || "_",
+            model: data.model || "_",
+            colour: data.colour || "_",
+            bodyType: data.bodyType || "_",
+            seatCap: data.seatCap || "_",
+            weight: data.weight || "_",
+            cubicCap: data.cubicCap || "_",
+            hp: data.hp || "_",
+            wheelBase: data.wheelBase || "_",
+            financier: data.financier || "NONE",
+            mfgDate: data.mfgDate || "_",
+            cylinders: data.cylinders || "_",
+            auth: data.auth || "_",
+            norms: data.norms || "_",
+            validity: data.validity || "_"
         };
 
         res.render('index', { v });
     } catch (err) {
+        console.error("API Error:", err.message);
         res.status(500).send("API Error or Invalid Vehicle Number.");
     }
 });
