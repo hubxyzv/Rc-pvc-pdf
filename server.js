@@ -6,6 +6,11 @@ const app = express();
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
+// ✅ Strict Update: Uptime Robot ke liye ping route
+app.get('/', (req, res) => {
+    res.send("Server is running 24/7");
+});
+
 app.get('/generate-rc', async (req, res) => {
     const vehicleId = req.query.id || "up62bz1861";
     const API_URL = `https://prerc-pvc-api.onrender.com/rc?id=${vehicleId}`;
@@ -26,7 +31,7 @@ app.get('/generate-rc', async (req, res) => {
                 chassis_number: data.chassis_number,
                 engine_number: data.engine_number,
                 owner_name: data.owner_name,
-                swd: "_ _", // Strict restriction applied here
+                swd: "_ _", // Strict restriction preserved
                 address: data.address,
                 fuel_type: data.fuel_type,
                 vehicle_class: data.vehicle_class,
@@ -60,7 +65,8 @@ app.get('/generate-rc', async (req, res) => {
     }
 });
 
-const PORT = 3000;
+// ✅ Update: Port configuration for 24/7 hosting platforms
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`🚀 Server running: http://localhost:${PORT}/generate-rc?id=up62bz1861`);
 });
