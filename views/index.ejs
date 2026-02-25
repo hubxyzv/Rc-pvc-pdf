@@ -64,8 +64,8 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.15); box-sizing: border-box;
     }  
     .gov-text-front { position: absolute; top: 13.4px; left: 50%; transform: translateX(-50%); font-family: 'MyriadProBold', sans-serif; font-size: 7.5pt; font-weight: bold; z-index: 10; white-space: nowrap; }  
-    #categoryCircle { position: absolute; top: 16.96px; left: 12.501px; font-size: 6.0pt; font-weight: bold; font-family: 'MyriadProBold', sans-serif; z-index: 20; }  
-    #stateCircle { position: absolute; top: 16.96px; left: 35.0px; font-size: 6.0pt; font-weight: bold; font-family: 'MyriadProBold', sans-serif; z-index: 20; }  
+    #categoryCircle { position: absolute; top: 16.96px; left: 12.501px; font-size: 6.0pt; font-weight: bold; font-family: 'MyriadProBold', sans-serif; z-index: 20; }
+    #stateCircle { position: absolute; top: 16.96px; left: 35.0px; font-size: 6.0pt; font-weight: bold; font-family: 'MyriadProBold', sans-serif; z-index: 20; }
     .strict-state-style { top: 16.96px !important; left: 34.0px !important; }
     .regn-label-f { font-size: 6.5pt; font-weight: bold; margin-bottom: 1.5px; white-space: nowrap; }  
     .regn-value-f { font-size: 6.5pt; white-space: nowrap; margin-top: 1.5px; font-weight: normal; }  
@@ -104,7 +104,7 @@
       <div class="overlay-item"><div class="overlay-label">Chassis Number</div><div class="overlay-value" id="view-chassis"></div></div>
       <div class="overlay-item"><div class="overlay-label">Engine / Motor Number</div><div class="overlay-value" id="view-engine"></div></div>
       <div class="overlay-item"><div class="overlay-label">Owner Name</div><div class="overlay-value" id="view-name"></div></div>
-      <div class="overlay-item"><div class="overlay-label">Son / Wife / Daughter of</div><div class="overlay-value" id="view-swd"></div></div>
+      <div class="overlay-item"><div class="overlay-label">Son / Wife / Daughter of</div><div class="overlay-value" id="view-swd">_ _</div></div>
       <div class="overlay-address-box">
         <div class="overlay-item"><div class="overlay-label">Address</div><div class="overlay-value" id="view-address"></div></div>
       </div>
@@ -138,60 +138,59 @@
     </div>  
     <img id="qrCodeImg" style="position:absolute; bottom:60px; left:6px; width:22mm; height:22mm; z-index:10;" src="" alt="QR Code" />
     <div style="position: absolute; top: 50%; right: 7px; transform: translateY(-50%) rotate(180deg); writing-mode: vertical-rl; font-size: 6.5pt; text-align: right; z-index: 15;">Form : 23A</div>  
-    <div id="f-auth" style="position: absolute; bottom: 7px; right: 10px; font-size: 6.5pt; line-height: 1.2; text-align: center; z-index: 10; width: 100px;">Registration Authority<br /><%= auth %></div>
+    <div id="f-auth" style="position: absolute; bottom: 7px; right: 10px; font-size: 6.5pt; line-height: 1.2; text-align: center; z-index: 10; width: 100px;">Registration Authority<br /><%= vehicle_details.authority %></div>
   </div>
 
 </div>
 
 <div class="status-panel">
   <strong>System Logs:</strong>
-  <div id="status-msg">Checking Integrity...</div>
+  <div id="status-msg">Integrity Verified. Ready.</div>
 </div>
 
 <script>
-  // 📝 --- MASTER DATA SOURCE (EJS Integration) ---
+  // 📝 --- AUTOMATED DATA MAPPING ---
   const masterData = {
-    regNo: "<%= regNo %>",
-    regDate: "<%= regDate %>",
-    cat: "<%= cat %>",
-    serial: "<%= serial %>",
-    chassis: "<%= chassis %>",
-    engine: "<%= engine %>",
-    name: "<%= name %>",
-    swd: "_ _",
-    address: "<%= address %>",
-    fuel: "<%= fuel %>",
-    vClass: "<%= vClass %>",
-    maker: "<%= maker %>",
-    model: "<%= model %>",
-    colour: "<%= colour %>",
-    bodyType: "<%= bodyType %>",
-    seatCap: "<%= seatCap %>",
-    weight: "<%= weight %>",
-    cubicCap: "<%= cubicCap %>",
-    hp: "<%= hp %>",
-    wheelBase: "<%= wheelBase %>",
-    financier: "<%= financier %>",
-    mfgDate: "<%= mfgDate %>",
-    cylinders: "<%= cylinders %>",
-    auth: "<%= auth %>",
-    norms: "<%= norms %>",
-    validity: "<%= validity %>"
+    regNo: "<%= vehicle_details.registration_number %>",
+    regDate: "<%= vehicle_details.registration_date %>",
+    cat: "<%= vehicle_details.category %>",
+    serial: "<%= vehicle_details.serial %>",
+    chassis: "<%= vehicle_details.chassis_number %>",
+    engine: "<%= vehicle_details.engine_number %>",
+    name: "<%= vehicle_details.owner_name %>",
+    swd: "_ _", // Strictly Hidden as requested
+    address: "<%= vehicle_details.address %>",
+    fuel: "<%= vehicle_details.fuel_type %>",
+    vClass: "<%= vehicle_details.vehicle_class %>",
+    maker: "<%= vehicle_details.manufacturer %>",
+    model: "<%= vehicle_details.model %>",
+    colour: "<%= vehicle_details.colour %>",
+    bodyType: "<%= vehicle_details.body_type %>",
+    seatCap: "<%= vehicle_details.seating_capacity %>",
+    weight: "<%= vehicle_details.unladen_weight_kg %>",
+    cubicCap: "<%= vehicle_details.cubic_capacity %>",
+    hp: "<%= vehicle_details.horse_power %>",
+    wheelBase: "<%= vehicle_details.wheelbase %>",
+    financier: "<%= vehicle_details.financier %>",
+    mfgDate: "<%= vehicle_details.manufacturing_date %>",
+    cylinders: "<%= vehicle_details.cylinders %>",
+    auth: "<%= vehicle_details.authority %>",
+    norms: "<%= vehicle_details.norms %>",
+    validity: "<%= vehicle_details.valid_upto %>",
+    state_code: "<%= state_code %>"
   };
 
   const stateMap = { AP: "Andhra Pradesh", AR: "Arunachal Pradesh", AS: "Assam", BR: "Bihar", CG: "Chhattisgarh", CH: "Chandigarh", DD: "Daman and Diu", DL: "Delhi", GA: "Goa", GJ: "Gujarat", HR: "Haryana", HP: "Himachal Pradesh", JH: "Jharkhand", JK: "Jammu and Kashmir", KA: "Karnataka", KL: "Kerala", LA: "Ladakh", LD: "Lakshadweep", MH: "Maharashtra", ML: "Meghalaya", MN: "Manipur", MP: "Madhya Pradesh", MZ: "Mizoram", NL: "Nagaland", OD: "Odisha", PB: "Punjab", PY: "Puducherry", RJ: "Rajasthan", SK: "Sikkim", TN: "Tamil Nadu", TR: "Tripura", TS: "Telangana", UK: "Uttarakhand", UP: "Uttar Pradesh", WB: "West Bengal" };
 
   function processAllCards() {
-    let logs = [];
-    const stateCode = masterData.regNo.slice(0, 2).toUpperCase();
-    const sName = stateMap[stateCode];
+    const sName = stateMap[masterData.state_code];
 
     // --- FILL CARD 1 ---
-    document.getElementById('view-gov').innerText = sName ? "Government of " + sName : "NOT DEFINED";
+    document.getElementById('view-gov').innerText = sName ? "Government of " + sName : "Government of India";
     document.getElementById('view-regNo').innerText = masterData.regNo;
     document.getElementById('view-regDate').innerText = masterData.regDate;
     document.getElementById('view-cat').innerText = masterData.cat.toUpperCase();
-    document.getElementById('view-state').innerText = stateCode;
+    document.getElementById('view-state').innerText = masterData.state_code;
     document.getElementById('view-valid').innerText = masterData.validity;
     document.getElementById('view-serial').innerText = masterData.serial;
     document.getElementById('view-chassis').innerText = masterData.chassis;
@@ -205,7 +204,7 @@
     // --- FILL CARD 2 ---
     document.getElementById("govText").textContent = "VEHICLE CLASS: " + masterData.vClass.toUpperCase();
     document.getElementById("regNoDisplay").textContent = masterData.regNo;
-    document.getElementById("stateCircle").textContent = stateCode;
+    document.getElementById("stateCircle").textContent = masterData.state_code;
     document.getElementById("categoryCircle").textContent = masterData.cat.toUpperCase();
     document.getElementById("f-maker").textContent = masterData.maker;
     document.getElementById("f-model").textContent = masterData.model;
@@ -219,17 +218,14 @@
     document.getElementById("f-finance").textContent = masterData.financier;
     document.getElementById("f-mfg").textContent = masterData.mfgDate;
     document.getElementById("f-cyl").textContent = masterData.cylinders;
-    document.getElementById("f-auth").innerHTML = `Registration Authority<br />${masterData.auth}`;
     
     // QR Code
     document.getElementById("qrCodeImg").src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent("https://vahan.parivahan.gov.in/rcdetails/?regno=" + masterData.regNo)}`;
     
-    if (["MH", "MN", "MZ", "WB"].includes(stateCode)) {
+    // Specific State Style
+    if (["MH", "MN", "MZ", "WB"].includes(masterData.state_code)) {
       document.getElementById("stateCircle").classList.add("strict-state-style");
     }
-
-    logs.push("✔ Dynamic Data Integrated Successfully");
-    document.getElementById('status-msg').innerHTML = logs.join("<br>");
   }
 
   window.onload = processAllCards;
