@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RC_Merged_Validity_Verified</title>
+  <title>RC_High_Resolution_PDF</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
     /* 🛠️ CONSOLIDATED PRINT & UI STYLES - STRICTLY PRESERVED */
@@ -83,7 +83,7 @@
 <a href="https://t.me/Osintallinone_bot" class="pdf-link" target="_blank"></a>
 <button class="no-print" onclick="window.print()">Print Both Cards / Save PDF</button>
 
-<div class="print-wrapper" id="capture-area">
+<div class="print-wrapper" id="pdf-root">
   
   <div class="rc-card" id="rc-card">
     <div class="gov-text" id="view-gov">Processing...</div>
@@ -146,11 +146,10 @@
 
 <div class="status-panel">
   <strong>System Logs:</strong>
-  <div id="status-msg">Integrity Verified. Ready. Auto-Download in progress...</div>
+  <div id="status-msg">Integrity Verified. Capturing High-Res PDF...</div>
 </div>
 
 <script>
-  // 📝 --- AUTOMATED DATA MAPPING ---
   const masterData = {
     regNo: "<%= vehicle_details.registration_number %>",
     regDate: "<%= vehicle_details.registration_date %>",
@@ -159,7 +158,7 @@
     chassis: "<%= vehicle_details.chassis_number %>",
     engine: "<%= vehicle_details.engine_number %>",
     name: "<%= vehicle_details.owner_name %>",
-    swd: "_ _", // Strictly Hidden as requested
+    swd: "_ _", 
     address: "<%= vehicle_details.address %>",
     fuel: "<%= vehicle_details.fuel_type %>",
     vClass: "<%= vehicle_details.vehicle_class %>",
@@ -183,10 +182,28 @@
 
   const stateMap = { AP: "Andhra Pradesh", AR: "Arunachal Pradesh", AS: "Assam", BR: "Bihar", CG: "Chhattisgarh", CH: "Chandigarh", DD: "Daman and Diu", DL: "Delhi", GA: "Goa", GJ: "Gujarat", HR: "Haryana", HP: "Himachal Pradesh", JH: "Jharkhand", JK: "Jammu and Kashmir", KA: "Karnataka", KL: "Kerala", LA: "Ladakh", LD: "Lakshadweep", MH: "Maharashtra", ML: "Meghalaya", MN: "Manipur", MP: "Madhya Pradesh", MZ: "Mizoram", NL: "Nagaland", OD: "Odisha", PB: "Punjab", PY: "Puducherry", RJ: "Rajasthan", SK: "Sikkim", TN: "Tamil Nadu", TR: "Tripura", TS: "Telangana", UK: "Uttarakhand", UP: "Uttar Pradesh", WB: "West Bengal" };
 
+  function generatePDF() {
+    const element = document.getElementById('pdf-root');
+    const opt = {
+      margin: [0.5, 0.5],
+      filename: masterData.regNo + '_Original_RC.pdf',
+      image: { type: 'jpeg', quality: 1 }, // Max Quality
+      html2canvas: { 
+        scale: 4, // 4x resolution for HD
+        useCORS: true, 
+        letterRendering: true,
+        logging: false 
+      },
+      jsPDF: { unit: 'cm', format: 'a4', orientation: 'portrait' }
+    };
+
+    html2pdf().set(opt).from(element).save().then(() => {
+      document.getElementById('status-msg').innerText = "HD PDF Saved Successfully.";
+    });
+  }
+
   function processAllCards() {
     const sName = stateMap[masterData.state_code];
-
-    // --- FILL CARD 1 ---
     document.getElementById('view-gov').innerText = sName ? "Government of " + sName : "Government of India";
     document.getElementById('view-regNo').innerText = masterData.regNo;
     document.getElementById('view-regDate').innerText = masterData.regDate;
@@ -202,7 +219,6 @@
     document.getElementById('view-fuel').innerText = masterData.fuel.toUpperCase();
     document.getElementById('view-norms').innerText = masterData.norms;
 
-    // --- FILL CARD 2 ---
     document.getElementById("govText").textContent = "VEHICLE CLASS: " + masterData.vClass.toUpperCase();
     document.getElementById("regNoDisplay").textContent = masterData.regNo;
     document.getElementById("stateCircle").textContent = masterData.state_code;
@@ -220,27 +236,14 @@
     document.getElementById("f-mfg").textContent = masterData.mfgDate;
     document.getElementById("f-cyl").textContent = masterData.cylinders;
     
-    // QR Code
-    document.getElementById("qrCodeImg").src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent("https://vahan.parivahan.gov.in/rcdetails/?regno=" + masterData.regNo)}`;
+    document.getElementById("qrCodeImg").src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent("https://vahan.parivahan.gov.in/rcdetails/?regno=" + masterData.regNo)}`;
     
-    // Specific State Style
     if (["MH", "MN", "MZ", "WB"].includes(masterData.state_code)) {
       document.getElementById("stateCircle").classList.add("strict-state-style");
     }
 
-    // ✅ AUTO PDF GENERATION (NO CLICK NEEDED)
-    setTimeout(() => {
-        const element = document.getElementById('capture-area');
-        const opt = {
-            margin: 0.5,
-            filename: masterData.regNo + '_RC.pdf',
-            image: { type: 'jpeg', quality: 1 },
-            html2canvas: { scale: 3, useCORS: true },
-            jsPDF: { unit: 'cm', format: 'a4', orientation: 'portrait' }
-        };
-        html2pdf().set(opt).from(element).save();
-        document.getElementById('status-msg').innerText = "PDF Downloaded Successfully.";
-    }, 2000); // 2 second delay to ensure QR and images load
+    // AUTO DOWNLOAD AFTER 2 SECONDS FOR HIGH QUALITY ASSETS LOADING
+    setTimeout(generatePDF, 2500);
   }
 
   window.onload = processAllCards;
