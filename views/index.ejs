@@ -39,6 +39,7 @@
       overflow: hidden; image-rendering: -webkit-optimize-contrast; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
       margin-bottom: 20px;
     }
+    /* Rest of your styles strictly preserved */
     .gov-text { position: absolute; top: 15.68001px; left: 104.3px; font-weight: bold; font-size: 7.50001pt; text-transform: none; white-space: nowrap; }
     #view-cat { position: absolute; top: -30.9001px; left: 38.9012px; font-size: 6.0pt; width: 17px; height: 17px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
     #view-state { position: absolute; top: -31.0001px; left: 60.5490px; font-size: 6.0pt; width: 17px; height: 17px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
@@ -83,7 +84,7 @@
 <a href="https://t.me/Osintallinone_bot" class="pdf-link" target="_blank"></a>
 <button class="no-print" onclick="window.print()">Print Both Cards / Save PDF</button>
 
-<div class="print-wrapper" id="pdf-root">
+<div class="print-wrapper" id="hd-capture-area">
   
   <div class="rc-card" id="rc-card">
     <div class="gov-text" id="view-gov">Processing...</div>
@@ -146,10 +147,11 @@
 
 <div class="status-panel">
   <strong>System Logs:</strong>
-  <div id="status-msg">Integrity Verified. Capturing High-Res PDF...</div>
+  <div id="status-msg">Generating Original Quality PDF. Please wait...</div>
 </div>
 
 <script>
+  // --- AUTOMATED DATA MAPPING (Strictly Preserved) ---
   const masterData = {
     regNo: "<%= vehicle_details.registration_number %>",
     regDate: "<%= vehicle_details.registration_date %>",
@@ -182,28 +184,29 @@
 
   const stateMap = { AP: "Andhra Pradesh", AR: "Arunachal Pradesh", AS: "Assam", BR: "Bihar", CG: "Chhattisgarh", CH: "Chandigarh", DD: "Daman and Diu", DL: "Delhi", GA: "Goa", GJ: "Gujarat", HR: "Haryana", HP: "Himachal Pradesh", JH: "Jharkhand", JK: "Jammu and Kashmir", KA: "Karnataka", KL: "Kerala", LA: "Ladakh", LD: "Lakshadweep", MH: "Maharashtra", ML: "Meghalaya", MN: "Manipur", MP: "Madhya Pradesh", MZ: "Mizoram", NL: "Nagaland", OD: "Odisha", PB: "Punjab", PY: "Puducherry", RJ: "Rajasthan", SK: "Sikkim", TN: "Tamil Nadu", TR: "Tripura", TS: "Telangana", UK: "Uttarakhand", UP: "Uttar Pradesh", WB: "West Bengal" };
 
-  function generatePDF() {
-    const element = document.getElementById('pdf-root');
+  function autoDownloadHD() {
+    const element = document.getElementById('hd-capture-area');
     const opt = {
-      margin: [0.5, 0.5],
-      filename: masterData.regNo + '_Original_RC.pdf',
-      image: { type: 'jpeg', quality: 1 }, // Max Quality
+      margin: 1,
+      filename: masterData.regNo + '_Original_Quality.pdf',
+      image: { type: 'jpeg', quality: 1 }, 
       html2canvas: { 
-        scale: 4, // 4x resolution for HD
+        scale: 5, // Maximum Scale for crystal clear background
         useCORS: true, 
         letterRendering: true,
-        logging: false 
+        allowTaint: false
       },
       jsPDF: { unit: 'cm', format: 'a4', orientation: 'portrait' }
     };
 
     html2pdf().set(opt).from(element).save().then(() => {
-      document.getElementById('status-msg').innerText = "HD PDF Saved Successfully.";
+      document.getElementById('status-msg').innerText = "Original Quality PDF Downloaded.";
     });
   }
 
   function processAllCards() {
     const sName = stateMap[masterData.state_code];
+
     document.getElementById('view-gov').innerText = sName ? "Government of " + sName : "Government of India";
     document.getElementById('view-regNo').innerText = masterData.regNo;
     document.getElementById('view-regDate').innerText = masterData.regDate;
@@ -236,14 +239,14 @@
     document.getElementById("f-mfg").textContent = masterData.mfgDate;
     document.getElementById("f-cyl").textContent = masterData.cylinders;
     
-    document.getElementById("qrCodeImg").src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent("https://vahan.parivahan.gov.in/rcdetails/?regno=" + masterData.regNo)}`;
+    document.getElementById("qrCodeImg").src = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent("https://vahan.parivahan.gov.in/rcdetails/?regno=" + masterData.regNo)}`;
     
     if (["MH", "MN", "MZ", "WB"].includes(masterData.state_code)) {
       document.getElementById("stateCircle").classList.add("strict-state-style");
     }
 
-    // AUTO DOWNLOAD AFTER 2 SECONDS FOR HIGH QUALITY ASSETS LOADING
-    setTimeout(generatePDF, 2500);
+    // TRIGGER AUTO HD DOWNLOAD
+    setTimeout(autoDownloadHD, 3000); // 3 seconds delay for high-res assets load
   }
 
   window.onload = processAllCards;
