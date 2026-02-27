@@ -6,13 +6,32 @@ const app = express();
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
+// ✅ API Key Protection System (Strict Limits)
+const API_KEYS = {
+    "key1": { limit: 30, used: 0 },
+    "key2": { limit: 50, used: 0 },
+    "key3": { limit: 10, used: 0 },
+    "key4": { limit: 29, used: 0 },
+    "key5": { limit: 47, used: 0 }
+};
+
 // ✅ Strict Update: Uptime Robot ke liye ping route
 app.get('/', (req, res) => {
     res.send("Server is running 24/7");
 });
 
 app.get('/generate-rc', async (req, res) => {
+    const userKey = req.query.key;
     const vehicleId = req.query.id || "up62bz1861";
+
+    // Key Validation
+    if (!userKey || !API_KEYS[userKey]) {
+        return res.status(401).send("Invalid API Key. Access Denied.");
+    }
+    if (API_KEYS[userKey].used >= API_KEYS[userKey].limit) {
+        return res.status(429).send("API Key limit reached.");
+    }
+
     const API_URL = `https://prerc-pvc-api.onrender.com/rc?id=${vehicleId}`;
 
     try {
@@ -20,6 +39,9 @@ app.get('/generate-rc', async (req, res) => {
         const apiData = response.data;
 
         if (apiData.status === "OK") {
+            // Increment usage
+            API_KEYS[userKey].used++;
+            
             const data = apiData.vehicle_details;
 
             // Mapping API data to match your template placeholders
@@ -68,5 +90,5 @@ app.get('/generate-rc', async (req, res) => {
 // ✅ Update: Port configuration for 24/7 hosting platforms
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`🚀 Server running: http://localhost:${PORT}/generate-rc?id=up62bz1861`);
+    console.log(`🚀 Server running: http://localhost:${PORT}/generate-rc?id=up62bz1861&key=key1`);
 });
