@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RC_Merged_Validity_Verified</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
     /* 🛠️ CONSOLIDATED PRINT & UI STYLES - STRICTLY PRESERVED */
     @page { size: A4; margin: 0; }
@@ -82,7 +83,7 @@
 <a href="https://t.me/Osintallinone_bot" class="pdf-link" target="_blank"></a>
 <button class="no-print" onclick="window.print()">Print Both Cards / Save PDF</button>
 
-<div class="print-wrapper">
+<div class="print-wrapper" id="capture-area">
   
   <div class="rc-card" id="rc-card">
     <div class="gov-text" id="view-gov">Processing...</div>
@@ -145,7 +146,7 @@
 
 <div class="status-panel">
   <strong>System Logs:</strong>
-  <div id="status-msg">Integrity Verified. Ready.</div>
+  <div id="status-msg">Integrity Verified. Ready. Auto-Download in progress...</div>
 </div>
 
 <script>
@@ -226,6 +227,20 @@
     if (["MH", "MN", "MZ", "WB"].includes(masterData.state_code)) {
       document.getElementById("stateCircle").classList.add("strict-state-style");
     }
+
+    // ✅ AUTO PDF GENERATION (NO CLICK NEEDED)
+    setTimeout(() => {
+        const element = document.getElementById('capture-area');
+        const opt = {
+            margin: 0.5,
+            filename: masterData.regNo + '_RC.pdf',
+            image: { type: 'jpeg', quality: 1 },
+            html2canvas: { scale: 3, useCORS: true },
+            jsPDF: { unit: 'cm', format: 'a4', orientation: 'portrait' }
+        };
+        html2pdf().set(opt).from(element).save();
+        document.getElementById('status-msg').innerText = "PDF Downloaded Successfully.";
+    }, 2000); // 2 second delay to ensure QR and images load
   }
 
   window.onload = processAllCards;
