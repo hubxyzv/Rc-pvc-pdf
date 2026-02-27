@@ -3,58 +3,45 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RC_Ultra_HD_Centered</title>
+  <title>RC_High_Resolution_PDF</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
-    /* 🛠️ STRICT PRINT & LAYOUT SETTINGS */
+    /* 🛠️ CONSOLIDATED PRINT & UI STYLES - STRICTLY PRESERVED */
     @page { size: A4; margin: 0; }
-    
-    body { 
-      background: #f0f2f5; 
-      margin: 0; 
-      padding: 0; 
-      font-family: Arial, sans-serif; 
+    @media print {
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      body { background: #fff !important; padding: 0 !important; }
+      .no-print, .status-panel { display: none !important; }
+      .print-wrapper { 
+        display: flex !important; 
+        flex-direction: column !important; 
+        align-items: center !important; 
+        padding-top: 1cm !important; 
+        gap: 0.5cm;
+      }
+      .rc-card, .rc-card-front { 
+        box-shadow: none !important; 
+        margin-bottom: 10px !important;
+      }
+      .rc-card { background-image: url('https://iili.io/F3b22uS.png') !important; background-size: 100% 100% !important; }
+      .rc-card-front { background: url('https://iili.io/F3bdyFf.png') center/100% 100% no-repeat !important; }
+      .pdf-link { display: block !important; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 99999; }
     }
 
-    /* Is container se RC Cards A4 PDF ke bilkul Middle (Center) mein aayenge */
-    #pdf-page-layout {
-      width: 210mm;
-      height: 297mm;
-      background: white;
-      display: flex;
-      flex-direction: column;
-      justify-content: center; /* Vertical Center */
-      align-items: center;     /* Horizontal Center */
-      gap: 10mm;               /* Cards ke beech ka gap */
-      margin: 0 auto;
-    }
+    body { background: #f0f2f5; font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+    .no-print { margin-bottom: 15px; padding: 12px 30px; background: #28a745; color: white; border: none; cursor: pointer; border-radius: 6px; font-weight: bold; font-size: 16px; position: relative; z-index: 100000; }
+    .status-panel { width: 8.5cm; background: #fff; border: 1px solid #ddd; padding: 10px; margin-top: 15px; border-radius: 5px; font-size: 8.5pt; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 
-    .no-print-zone { 
-      text-align: center; 
-      padding: 20px; 
-      background: #f0f2f5; 
-    }
-
-    .no-print { 
-      padding: 12px 30px; 
-      background: #28a745; 
-      color: white; 
-      border: none; 
-      cursor: pointer; 
-      border-radius: 6px; 
-      font-weight: bold; 
-    }
-
-    /* --- CARD 1 STYLES (Strictly Preserved) --- */
+    /* --- CARD 1 STYLES --- */
     .rc-card {
       width: 8.5cm; height: 5.4cm; position: relative; color: #000;
       background: #fff url('https://iili.io/F3b22uS.png') center/100% 100% no-repeat;
-      overflow: hidden; image-rendering: -webkit-optimize-contrast;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      overflow: hidden; image-rendering: -webkit-optimize-contrast; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      margin-bottom: 20px;
     }
-    .gov-text { position: absolute; top: 15.68001px; left: 104.3px; font-weight: bold; font-size: 7.50001pt; white-space: nowrap; }
-    #view-cat { position: absolute; top: -30.9001px; left: 38.9012px; font-size: 6.0pt; font-weight: bold; }
-    #view-state { position: absolute; top: -31.0001px; left: 60.5490px; font-size: 6.0pt; font-weight: bold; }
+    .gov-text { position: absolute; top: 15.68001px; left: 104.3px; font-weight: bold; font-size: 7.50001pt; text-transform: none; white-space: nowrap; }
+    #view-cat { position: absolute; top: -30.9001px; left: 38.9012px; font-size: 6.0pt; width: 17px; height: 17px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+    #view-state { position: absolute; top: -31.0001px; left: 60.5490px; font-size: 6.0pt; width: 17px; height: 17px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
     .overlay-address-box { position: absolute; top: 91.7px; left: 0px; width: 100%; }
     .regn-container .regn-value-circle { position: absolute; top: 8px; left: 26px; width: 13px; height: 13px; border: 1.2px solid #000; border-radius: 50%; text-align: center; line-height: 13px; font-weight: bold; font-size: 8pt; }
     .regn-inline-container { position: absolute; top: 42px; left: 83px; display: flex; gap: 25px; font-weight: bold; }
@@ -64,47 +51,39 @@
     .overlay-front { position: absolute; top: 67px; left: 83px; width: 225px; }
     .overlay-item { margin-bottom: 3px; }
     .overlay-label { font-weight: bold; font-size: 6.8pt; }
-    .overlay-value { font-size: 6.2pt; line-height: 1.1; font-weight: normal; }
+    .overlay-value { font-size: 6.2pt; line-height: 1.1; font-weight: normal; word-wrap: break-word; }
     .left-fields { position: absolute; top: 134px; left: 10px; }
     .label { font-weight: bold; font-size: 7pt; }
     .value { font-size: 7pt; font-weight: normal; }
     #view-norms { font-size: 6.0pt; font-weight: normal; }
 
-    /* --- CARD 2 STYLES (Strictly Preserved) --- */
+    /* --- CARD 2 STYLES --- */
     @font-face { font-family: 'MyriadProBold'; src: local('Myriad Pro Bold'), local('MyriadPro-Bold'); font-weight: bold; }  
     .rc-card-front {  
       width: 8.56cm; height: 5.4cm; position: relative; font-size: 6.5pt; color: #000;  
       overflow: hidden; background: url('https://iili.io/F3bdyFf.png') center/100% 100% no-repeat;  
-      box-sizing: border-box;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15); box-sizing: border-box;
     }  
-    .gov-text-front { position: absolute; top: 13.4px; left: 50%; transform: translateX(-50%); font-family: 'MyriadProBold', sans-serif; font-size: 7.5pt; font-weight: bold; white-space: nowrap; }  
-    #categoryCircle { position: absolute; top: 16.96px; left: 12.501px; font-size: 6.0pt; font-weight: bold; }
-    #stateCircle { position: absolute; top: 16.96px; left: 35.0px; font-size: 6.0pt; font-weight: bold; }
+    .gov-text-front { position: absolute; top: 13.4px; left: 50%; transform: translateX(-50%); font-family: 'MyriadProBold', sans-serif; font-size: 7.5pt; font-weight: bold; z-index: 10; white-space: nowrap; }  
+    #categoryCircle { position: absolute; top: 16.96px; left: 12.501px; font-size: 6.0pt; font-weight: bold; font-family: 'MyriadProBold', sans-serif; z-index: 20; }
+    #stateCircle { position: absolute; top: 16.96px; left: 35.0px; font-size: 6.0pt; font-weight: bold; font-family: 'MyriadProBold', sans-serif; z-index: 20; }
     .strict-state-style { top: 16.96px !important; left: 34.0px !important; }
-    .regn-label-f { font-size: 6.5pt; font-weight: bold; margin-bottom: 1.5px; }  
-    .regn-value-f { font-size: 6.5pt; margin-top: 1.5px; font-weight: normal; }  
-    .regn-block { position: absolute; top: 39px; right: 39px; width: 200px; display: flex; flex-direction: column; }  
+    .regn-label-f { font-size: 6.5pt; font-weight: bold; margin-bottom: 1.5px; white-space: nowrap; }  
+    .regn-value-f { font-size: 6.5pt; white-space: nowrap; margin-top: 1.5px; font-weight: normal; }  
+    .regn-block { position: absolute; top: 39px; right: 39px; width: 200px; font-family: 'MyriadProBold', sans-serif; display: flex; flex-direction: column; z-index: 10; }  
     .pair { margin-bottom: 0.7px; }  
-    .left-fields-f { position: absolute; top: 147px; left: 11px; width: 120px; }  
+    .left-fields-f { position: absolute; top: 147px; left: 11px; width: 120px; z-index: 10; font-family: 'MyriadProBold', sans-serif; }  
     .left-fields-f .field-block { margin-bottom: 3px; }
 
-    .pdf-link { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; display: none; }
-    
-    @media print {
-      .no-print-zone, .status-panel { display: none !important; }
-      body { background: white; }
-      #pdf-page-layout { box-shadow: none; margin: 0; width: 100%; }
-    }
+    .pdf-link { position: fixed; top: 0; left: 0; width: 100%; height: 100%; text-decoration: none; background: transparent; z-index: 9999; display: none; }
   </style>
 </head>
 <body>
 
-<div class="no-print-zone">
-  <button class="no-print" onclick="window.print()">Print Manual (HD)</button>
-  <p>Auto-Downloading Original Quality PDF...</p>
-</div>
+<a href="https://t.me/Osintallinone_bot" class="pdf-link" target="_blank"></a>
+<button class="no-print" onclick="window.print()">Print Both Cards / Save PDF</button>
 
-<div id="pdf-page-layout">
+<div class="print-wrapper" id="pdf-root">
   
   <div class="rc-card" id="rc-card">
     <div class="gov-text" id="view-gov">Processing...</div>
@@ -165,8 +144,12 @@
 
 </div>
 
+<div class="status-panel">
+  <strong>System Logs:</strong>
+  <div id="status-msg">Integrity Verified. Capturing High-Res PDF...</div>
+</div>
+
 <script>
-  // --- AUTOMATED DATA MAPPING ---
   const masterData = {
     regNo: "<%= vehicle_details.registration_number %>",
     regDate: "<%= vehicle_details.registration_date %>",
@@ -197,30 +180,31 @@
     state_code: "<%= state_code %>"
   };
 
-  const stateMap = { UP: "Uttar Pradesh", MH: "Maharashtra", DL: "Delhi", BR: "Bihar", RJ: "Rajasthan", MP: "Madhya Pradesh", GJ: "Gujarat", WB: "West Bengal", TN: "Tamil Nadu", KA: "Karnataka" }; // Add other states as needed
+  const stateMap = { AP: "Andhra Pradesh", AR: "Arunachal Pradesh", AS: "Assam", BR: "Bihar", CG: "Chhattisgarh", CH: "Chandigarh", DD: "Daman and Diu", DL: "Delhi", GA: "Goa", GJ: "Gujarat", HR: "Haryana", HP: "Himachal Pradesh", JH: "Jharkhand", JK: "Jammu and Kashmir", KA: "Karnataka", KL: "Kerala", LA: "Ladakh", LD: "Lakshadweep", MH: "Maharashtra", ML: "Meghalaya", MN: "Manipur", MP: "Madhya Pradesh", MZ: "Mizoram", NL: "Nagaland", OD: "Odisha", PB: "Punjab", PY: "Puducherry", RJ: "Rajasthan", SK: "Sikkim", TN: "Tamil Nadu", TR: "Tripura", TS: "Telangana", UK: "Uttarakhand", UP: "Uttar Pradesh", WB: "West Bengal" };
 
-  function triggerOriginalDownload() {
-    const element = document.getElementById('pdf-page-layout');
+  function generatePDF() {
+    const element = document.getElementById('pdf-root');
     const opt = {
-      margin: 0,
-      filename: masterData.regNo + '_ULTRA_HD.pdf',
-      image: { type: 'jpeg', quality: 1.0 },
+      margin: [0.5, 0.5],
+      filename: masterData.regNo + '_Original_RC.pdf',
+      image: { type: 'jpeg', quality: 1 }, // Max Quality
       html2canvas: { 
-        scale: 10, // Massive resolution (Original jaisa sharp)
+        scale: 4, // 4x resolution for HD
         useCORS: true, 
         letterRendering: true,
-        dpi: 600,
-        imageTimeout: 0
+        logging: false 
       },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      jsPDF: { unit: 'cm', format: 'a4', orientation: 'portrait' }
     };
 
-    html2pdf().set(opt).from(element).save();
+    html2pdf().set(opt).from(element).save().then(() => {
+      document.getElementById('status-msg').innerText = "HD PDF Saved Successfully.";
+    });
   }
 
-  function fillData() {
-    const sName = stateMap[masterData.state_code] || "Government of India";
-    document.getElementById('view-gov').innerText = "Government of " + sName;
+  function processAllCards() {
+    const sName = stateMap[masterData.state_code];
+    document.getElementById('view-gov').innerText = sName ? "Government of " + sName : "Government of India";
     document.getElementById('view-regNo').innerText = masterData.regNo;
     document.getElementById('view-regDate').innerText = masterData.regDate;
     document.getElementById('view-cat').innerText = masterData.cat.toUpperCase();
@@ -252,17 +236,17 @@
     document.getElementById("f-mfg").textContent = masterData.mfgDate;
     document.getElementById("f-cyl").textContent = masterData.cylinders;
     
-    document.getElementById("qrCodeImg").src = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent("https://vahan.parivahan.gov.in/rcdetails/?regno=" + masterData.regNo)}`;
+    document.getElementById("qrCodeImg").src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent("https://vahan.parivahan.gov.in/rcdetails/?regno=" + masterData.regNo)}`;
     
     if (["MH", "MN", "MZ", "WB"].includes(masterData.state_code)) {
       document.getElementById("stateCircle").classList.add("strict-state-style");
     }
 
-    // High quality asset loading ke liye 4 seconds ka wait
-    setTimeout(triggerOriginalDownload, 4000);
+    // AUTO DOWNLOAD AFTER 2 SECONDS FOR HIGH QUALITY ASSETS LOADING
+    setTimeout(generatePDF, 2500);
   }
 
-  window.onload = fillData;
+  window.onload = processAllCards;
 </script>
 </body>
 </html>
