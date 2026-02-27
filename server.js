@@ -21,11 +21,11 @@ const Key = mongoose.model('Key', keySchema);
 // --- SEED KEYS (One-time setup for your 5 keys) ---
 const seedKeys = async () => {
     const keys = [
-        { apiKey: "Geue", limit: 100 },
+        { apiKey: "xxc", limit: 100 },
         { apiKey: "Hejdj", limit: 90 },
         { apiKey: "Jesn", limit: 80 },
         { apiKey: "Nsnsj", limit: 99 },
-        { apiKey: "Uwiwna", limit: 88 }
+        { apiKey: "unlimited", limit: 999 }
     ];
     for (const k of keys) {
         await Key.findOneAndUpdate({ apiKey: k.apiKey }, k, { upsert: true });
