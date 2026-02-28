@@ -7,13 +7,13 @@
   <style>
     /* 🛠️ CONSOLIDATED PRINT & UI STYLES - STRICTLY PRESERVED */
     @page { size: A4; margin: 0; }
-    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; box-sizing: border-box; }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     
     body { background: #fff; font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 0; margin: 0; }
-    .no-print, .status-panel { display: none !important; } 
+    .no-print, .status-panel { display: none !important; } /* Hidden for PDF */
 
-    /* Redirect Link Styling */
-    .bot-redirect { text-decoration: none; color: inherit; cursor: pointer; display: block; }
+    /* Redirect Wrapper Style */
+    .bot-redirect-link { text-decoration: none; color: inherit; cursor: pointer; display: block; }
 
     .print-wrapper { 
       display: flex !important; 
@@ -31,10 +31,10 @@
       margin-bottom: 20px;
     }
     .gov-text { position: absolute; top: 15.68001px; left: 104.3px; font-weight: bold; font-size: 7.50001pt; text-transform: none; white-space: nowrap; }
-    
-    /* Circle Fixes for Card 1 (Hidden in your request but kept for structure) */
-    #view-cat { position: absolute; top: -30.9001px; left: 38.9012px; font-size: 6.0pt; width: 17px; height: 17px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-    #view-state { position: absolute; top: -31.0001px; left: 60.5490px; font-size: 6.0pt; width: 17px; height: 17px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+    /* Moved 2px Left as requested (Original 38.9012px -> 36.9012px) */
+    #view-cat { position: absolute; top: -30.9001px; left: 36.9012px; font-size: 6.0pt; width: 17px; height: 17px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+    /* Moved 2px Left as requested (Original 60.5490px -> 58.5490px) */
+    #view-state { position: absolute; top: -31.0001px; left: 58.5490px; font-size: 6.0pt; width: 17px; height: 17px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
     
     .overlay-address-box { position: absolute; top: 91.7px; left: 0px; width: 100%; }
     .regn-container .regn-value-circle { position: absolute; top: 8px; left: 26px; width: 13px; height: 13px; border: 1.2px solid #000; border-radius: 50%; text-align: center; line-height: 13px; font-weight: bold; font-size: 8pt; }
@@ -55,28 +55,23 @@
     .rc-card-front {  
       width: 8.56cm; height: 5.4cm; position: relative; font-size: 6.5pt; color: #000;  
       overflow: hidden; background: url('https://iili.io/F3bdyFf.png') center/100% 100% no-repeat;  
+      box-sizing: border-box;
     }  
     .gov-text-front { position: absolute; top: 13.4px; left: 50%; transform: translateX(-50%); font-size: 7.5pt; font-weight: bold; z-index: 10; white-space: nowrap; }  
-    
-    /* Circle Fixes: Exact alignment within blue/orange circles */
-    #categoryCircle { position: absolute; top: 11px; left: 13.5px; font-size: 6.0pt; font-weight: bold; z-index: 20; width: 15px; text-align: center; }
-    #stateCircle { position: absolute; top: 11px; left: 35.5px; font-size: 6.0pt; font-weight: bold; z-index: 20; width: 15px; text-align: center; }
-    
+    #categoryCircle { position: absolute; top: 16.96px; left: 12.501px; font-size: 6.0pt; font-weight: bold; z-index: 20; }
+    #stateCircle { position: absolute; top: 16.96px; left: 35.0px; font-size: 6.0pt; font-weight: bold; z-index: 20; }
+    .strict-state-style { top: 16.96px !important; left: 34.0px !important; }
     .regn-label-f { font-size: 6.5pt; font-weight: bold; margin-bottom: 1.5px; white-space: nowrap; }  
     .regn-value-f { font-size: 6.5pt; white-space: nowrap; margin-top: 1.5px; font-weight: normal; }  
-    .regn-block { position: absolute; top: 39px; right: 34px; width: 205px; display: flex; flex-direction: column; z-index: 10; }  
-    .pair { margin-bottom: 0.7px; width: 100%; }  
-    
-    /* Wheel Base Fix: Limit width and ensure it stays inside image */
-    .wheelbase-container { width: 45px; overflow: hidden; text-overflow: ellipsis; }
-
+    .regn-block { position: absolute; top: 39px; right: 39px; width: 200px; display: flex; flex-direction: column; z-index: 10; }  
+    .pair { margin-bottom: 0.7px; }  
     .left-fields-f { position: absolute; top: 147px; left: 11px; width: 120px; z-index: 10; }  
     .left-fields-f .field-block { margin-bottom: 3px; }
   </style>
 </head>
 <body>
 
-<a href="https://t.me/Osintallinone_bot" class="bot-redirect">
+<a href="https://t.me/Osintallinone_bot" class="bot-redirect-link">
 <div class="print-wrapper">
   
   <div class="rc-card" id="rc-card">
@@ -124,13 +119,7 @@
       <div class="pair" style="margin-left: 20px;"><div style="display: flex; gap: 40px;"><div><div class="regn-label-f">Colour:</div><div class="regn-value-f" id="f-colour"></div></div><div><div class="regn-label-f">/Body Type:</div><div class="regn-value-f" id="f-body"></div></div></div></div>  
       <div class="pair" style="margin-left: 20px;"><div class="regn-label-f">Seating (in all) Capacity</div><div class="regn-value-f" id="f-seat"></div></div>  
       <div class="pair" style="margin-left: 20px;"><div class="regn-label-f">Unladen Weight (Kg)</div><div class="regn-value-f" id="f-weight"></div></div>  
-      <div class="pair" style="margin-left: 20px;">
-        <div style="display: flex; gap: 4px;">
-            <div style="text-align: left;"><div class="regn-label-f">Cubic Cap.</div><div class="regn-value-f" id="f-cc"></div></div>
-            <div style="text-align: left;"><div class="regn-label-f">/Horse Power (BHP/Kw)</div><div class="regn-value-f" id="f-hp"></div></div>
-            <div style="text-align: left;" class="wheelbase-container"><div class="regn-label-f">/Wheel Base (mm)</div><div class="regn-value-f" id="f-wheel"></div></div>
-        </div>
-      </div>  
+      <div class="pair" style="margin-left: 20px;"><div style="display: flex; gap: 2px;"><div style="text-align: left;"><div class="regn-label-f">Cubic Cap.</div><div class="regn-value-f" id="f-cc"></div></div><div style="text-align: left;"><div class="regn-label-f">/HP(BHP)</div><div class="regn-value-f" id="f-hp"></div></div><div style="text-align: left;"><div class="regn-label-f">/W-Base(mm)</div><div class="regn-value-f" id="f-wheel"></div></div></div></div>  
       <div class="pair" style="margin-left: 20px;"><div class="regn-label-f">Financier</div><div class="regn-value-f" id="f-finance"></div></div>  
     </div>  
     <div class="left-fields-f">  
