@@ -3,17 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RC_Verified_Secure</title>
+  <title>RC_Merged_Validity_Verified</title>
   <style>
-    /* STYLES PRESERVED EXACTLY AS REQUESTED */
+    /* 🛠️ CONSOLIDATED PRINT & UI STYLES - STRICTLY PRESERVED */
     @page { size: A4; margin: 0; }
     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-    body { background: #fff; font-family: Arial, sans-serif; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; }
     
+    body { background: #fff; font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 0; margin: 0; }
+    .no-print, .status-panel { display: none !important; } /* Hidden for PDF */
+
     .print-wrapper { 
-      display: flex; flex-direction: column; align-items: center; padding-top: 1cm; gap: 0.5cm;
+      display: flex !important; 
+      flex-direction: column !important; 
+      align-items: center !important; 
+      padding-top: 1cm !important; 
+      gap: 0.5cm;
     }
 
+    /* --- CARD 1 STYLES --- */
     .rc-card {
       width: 8.5cm; height: 5.4cm; position: relative; color: #000;
       background: #fff url('https://iili.io/F3b22uS.png') center/100% 100% no-repeat;
@@ -36,13 +43,15 @@
     .left-fields { position: absolute; top: 134px; left: 10px; }
     .label { font-weight: bold; font-size: 7pt; }
     .value { font-size: 7pt; font-weight: normal; }
+    #view-norms { font-size: 6.0pt; font-weight: normal; }
 
+    /* --- CARD 2 STYLES --- */
     .rc-card-front {  
       width: 8.56cm; height: 5.4cm; position: relative; font-size: 6.5pt; color: #000;  
       overflow: hidden; background: url('https://iili.io/F3bdyFf.png') center/100% 100% no-repeat;  
       box-sizing: border-box;
     }  
-    .gov-text-front { position: absolute; top: 13.4px; left: 50%; transform: translateX(-50%); font-weight: bold; font-size: 7.5pt; z-index: 10; white-space: nowrap; }  
+    .gov-text-front { position: absolute; top: 13.4px; left: 50%; transform: translateX(-50%); font-size: 7.5pt; font-weight: bold; z-index: 10; white-space: nowrap; }  
     #categoryCircle { position: absolute; top: 16.96px; left: 12.501px; font-size: 6.0pt; font-weight: bold; z-index: 20; }
     #stateCircle { position: absolute; top: 16.96px; left: 35.0px; font-size: 6.0pt; font-weight: bold; z-index: 20; }
     .strict-state-style { top: 16.96px !important; left: 34.0px !important; }
@@ -114,11 +123,11 @@
     <div style="position: absolute; top: 50%; right: 7px; transform: translateY(-50%) rotate(180deg); writing-mode: vertical-rl; font-size: 6.5pt; text-align: right; z-index: 15;">Form : 23A</div>  
     <div id="f-auth" style="position: absolute; bottom: 7px; right: 10px; font-size: 6.5pt; line-height: 1.2; text-align: center; z-index: 10; width: 100px;">Registration Authority<br /><%= vehicle_details.authority %></div>
   </div>
+
 </div>
 
 <script>
-  // Automation script for PDF rendering
-  const m = {
+  const masterData = {
     regNo: "<%= vehicle_details.registration_number %>",
     regDate: "<%= vehicle_details.registration_date %>",
     cat: "<%= vehicle_details.category %>",
@@ -126,7 +135,7 @@
     chassis: "<%= vehicle_details.chassis_number %>",
     engine: "<%= vehicle_details.engine_number %>",
     name: "<%= vehicle_details.owner_name %>",
-    swd: "_ _",
+    swd: "_ _", 
     address: "<%= vehicle_details.address %>",
     fuel: "<%= vehicle_details.fuel_type %>",
     vClass: "<%= vehicle_details.vehicle_class %>",
@@ -144,46 +153,49 @@
     cylinders: "<%= vehicle_details.cylinders %>",
     norms: "<%= vehicle_details.norms %>",
     validity: "<%= vehicle_details.valid_upto %>",
-    sc: "<%= state_code %>"
+    state_code: "<%= state_code %>"
   };
 
-  const sMap = { AP: "Andhra Pradesh", AR: "Arunachal Pradesh", AS: "Assam", BR: "Bihar", CG: "Chhattisgarh", CH: "Chandigarh", DD: "Daman and Diu", DL: "Delhi", GA: "Goa", GJ: "Gujarat", HR: "Haryana", HP: "Himachal Pradesh", JH: "Jharkhand", JK: "Jammu and Kashmir", KA: "Karnataka", KL: "Kerala", LA: "Ladakh", LD: "Lakshadweep", MH: "Maharashtra", ML: "Meghalaya", MN: "Manipur", MP: "Madhya Pradesh", MZ: "Mizoram", NL: "Nagaland", OD: "Odisha", PB: "Punjab", PY: "Puducherry", RJ: "Rajasthan", SK: "Sikkim", TN: "Tamil Nadu", TR: "Tripura", TS: "Telangana", UK: "Uttarakhand", UP: "Uttar Pradesh", WB: "West Bengal" };
+  const stateMap = { AP: "Andhra Pradesh", AR: "Arunachal Pradesh", AS: "Assam", BR: "Bihar", CG: "Chhattisgarh", CH: "Chandigarh", DD: "Daman and Diu", DL: "Delhi", GA: "Goa", GJ: "Gujarat", HR: "Haryana", HP: "Himachal Pradesh", JH: "Jharkhand", JK: "Jammu and Kashmir", KA: "Karnataka", KL: "Kerala", LA: "Ladakh", LD: "Lakshadweep", MH: "Maharashtra", ML: "Meghalaya", MN: "Manipur", MP: "Madhya Pradesh", MZ: "Mizoram", NL: "Nagaland", OD: "Odisha", PB: "Punjab", PY: "Puducherry", RJ: "Rajasthan", SK: "Sikkim", TN: "Tamil Nadu", TR: "Tripura", TS: "Telangana", UK: "Uttarakhand", UP: "Uttar Pradesh", WB: "West Bengal" };
 
-  document.getElementById('view-gov').innerText = "Government of " + (sMap[m.sc] || "India");
-  document.getElementById('view-regNo').innerText = m.regNo;
-  document.getElementById('view-regDate').innerText = m.regDate;
-  document.getElementById('view-cat').innerText = m.cat.toUpperCase();
-  document.getElementById('view-state').innerText = m.sc;
-  document.getElementById('view-valid').innerText = m.validity;
-  document.getElementById('view-serial').innerText = m.serial;
-  document.getElementById('view-chassis').innerText = m.chassis;
-  document.getElementById('view-engine').innerText = m.engine;
-  document.getElementById('view-name').innerText = m.name;
-  document.getElementById('view-swd').innerText = m.swd;
-  document.getElementById('view-address').innerText = m.address;
-  document.getElementById('view-fuel').innerText = m.fuel.toUpperCase();
-  document.getElementById('view-norms').innerText = m.norms;
-  document.getElementById("govText").textContent = "VEHICLE CLASS: " + m.vClass.toUpperCase();
-  document.getElementById("regNoDisplay").textContent = m.regNo;
-  document.getElementById("stateCircle").textContent = m.sc;
-  document.getElementById("categoryCircle").textContent = m.cat.toUpperCase();
-  document.getElementById("f-maker").textContent = m.maker;
-  document.getElementById("f-model").textContent = m.model;
-  document.getElementById("f-colour").textContent = m.colour;
-  document.getElementById("f-body").textContent = m.bodyType;
-  document.getElementById("f-seat").textContent = m.seatCap;
-  document.getElementById("f-weight").textContent = m.weight;
-  document.getElementById("f-cc").textContent = m.cubicCap;
-  document.getElementById("f-hp").textContent = m.hp;
-  document.getElementById("f-wheel").textContent = m.wheelBase;
-  document.getElementById("f-finance").textContent = m.financier;
-  document.getElementById("f-mfg").textContent = m.mfgDate;
-  document.getElementById("f-cyl").textContent = m.cylinders;
-  document.getElementById("qrCodeImg").src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent("https://vahan.parivahan.gov.in/rcdetails/?regno=" + m.regNo)}`;
-  
-  if (["MH", "MN", "MZ", "WB"].includes(m.sc)) {
-    document.getElementById("stateCircle").classList.add("strict-state-style");
+  function processAllCards() {
+    const sName = stateMap[masterData.state_code];
+    document.getElementById('view-gov').innerText = sName ? "Government of " + sName : "Government of India";
+    document.getElementById('view-regNo').innerText = masterData.regNo;
+    document.getElementById('view-regDate').innerText = masterData.regDate;
+    document.getElementById('view-cat').innerText = masterData.cat.toUpperCase();
+    document.getElementById('view-state').innerText = masterData.state_code;
+    document.getElementById('view-valid').innerText = masterData.validity;
+    document.getElementById('view-serial').innerText = masterData.serial;
+    document.getElementById('view-chassis').innerText = masterData.chassis;
+    document.getElementById('view-engine').innerText = masterData.engine;
+    document.getElementById('view-name').innerText = masterData.name;
+    document.getElementById('view-swd').innerText = masterData.swd;
+    document.getElementById('view-address').innerText = masterData.address;
+    document.getElementById('view-fuel').innerText = masterData.fuel.toUpperCase();
+    document.getElementById('view-norms').innerText = masterData.norms;
+    document.getElementById("govText").textContent = "VEHICLE CLASS: " + masterData.vClass.toUpperCase();
+    document.getElementById("regNoDisplay").textContent = masterData.regNo;
+    document.getElementById("stateCircle").textContent = masterData.state_code;
+    document.getElementById("categoryCircle").textContent = masterData.cat.toUpperCase();
+    document.getElementById("f-maker").textContent = masterData.maker;
+    document.getElementById("f-model").textContent = masterData.model;
+    document.getElementById("f-colour").textContent = masterData.colour;
+    document.getElementById("f-body").textContent = masterData.bodyType;
+    document.getElementById("f-seat").textContent = masterData.seatCap;
+    document.getElementById("f-weight").textContent = masterData.weight;
+    document.getElementById("f-cc").textContent = masterData.cubicCap;
+    document.getElementById("f-hp").textContent = masterData.hp;
+    document.getElementById("f-wheel").textContent = masterData.wheelBase;
+    document.getElementById("f-finance").textContent = masterData.financier;
+    document.getElementById("f-mfg").textContent = masterData.mfgDate;
+    document.getElementById("f-cyl").textContent = masterData.cylinders;
+    document.getElementById("qrCodeImg").src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent("https://vahan.parivahan.gov.in/rcdetails/?regno=" + masterData.regNo)}`;
+    if (["MH", "MN", "MZ", "WB"].includes(masterData.state_code)) {
+      document.getElementById("stateCircle").classList.add("strict-state-style");
+    }
   }
+  processAllCards();
 </script>
 </body>
 </html>
