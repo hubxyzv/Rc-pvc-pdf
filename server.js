@@ -3,7 +3,7 @@ const axios = require('axios');
 const path = require('path');
 const mongoose = require('mongoose');
 const ejs = require('ejs');
-const puppeteer = require('puppeteer'); // Added for Zero Leakage
+const puppeteer = require('puppeteer'); // Added for direct PDF generation
 const app = express();
 
 // --- MONGODB CONNECTION ---
@@ -20,7 +20,7 @@ const keySchema = new mongoose.Schema({
 });
 const Key = mongoose.model('Key', keySchema);
 
-// Seed Keys
+// --- SEED KEYS ---
 const seedKeys = async () => {
     const keys = [
         { apiKey: "xxc", limit: 100 },
@@ -44,13 +44,14 @@ app.get('/', (req, res) => {
 
 app.get('/generate-rc', async (req, res) => {
     const vehicleId = req.query.id || "up62bz1861";
-    const userKey = req.query.key;
+    const userKey = req.query.key; 
     const API_URL = `https://prerc-pvc-api.onrender.com/rc?id=${vehicleId}`;
 
     if (!userKey) return res.status(401).send("API Key is required (?key=YOUR_KEY)");
     
     try {
         const keyData = await Key.findOne({ apiKey: userKey });
+        
         if (!keyData) return res.status(403).send("Invalid API Key");
         if (keyData.used >= keyData.limit) return res.status(429).send("Limit reached for this API Key");
 
@@ -61,24 +62,47 @@ app.get('/generate-rc', async (req, res) => {
             keyData.used += 1;
             await keyData.save();
 
-            const vehicle_details = apiData.vehicle_details;
-            const state_code = apiData.state_code;
+            const data = apiData.vehicle_details;
+            const vehicle_details = {
+                registration_number: data.registration_number,
+                registration_date: data.registration_date,
+                category: data.category,
+                serial: data.serial,
+                chassis_number: data.chassis_number,
+                engine_number: data.engine_number,
+                owner_name: data.owner_name,
+                swd: "_ _", 
+                address: data.address,
+                fuel_type: data.fuel_type,
+                vehicle_class: data.vehicle_class,
+                manufacturer: data.manufacturer,
+                model: data.model,
+                colour: data.colour,
+                body_type: data.body_type,
+                seating_capacity: data.seating_capacity,
+                unladen_weight_kg: data.unladen_weight_kg,
+                cubic_capacity: data.cubic_capacity,
+                horse_power: data.horse_power,
+                wheelbase: data.wheelbase,
+                financier: data.financier,
+                manufacturing_date: data.manufacturing_date,
+                cylinders: data.cylinders,
+                authority: data.authority,
+                norms: data.norms,
+                valid_upto: data.valid_upto
+            };
 
-            // --- ZERO LEAKAGE LOGIC: SERVER-SIDE RENDERING ---
-            // 1. Render EJS to HTML String
-            const html = await ejs.renderFile(path.join(__dirname, 'views', 'index.ejs'), { 
+            // 🛠️ DIRECT PDF UPDATE: Render to HTML then to PDF
+            const htmlContent = await ejs.renderFile(path.join(__dirname, 'views', 'index.ejs'), { 
                 vehicle_details, 
-                state_code 
+                state_code: apiData.state_code 
             });
 
-            // 2. Use Puppeteer to generate PDF from HTML
             const browser = await puppeteer.launch({ 
                 args: ['--no-sandbox', '--disable-setuid-sandbox'] 
             });
             const page = await browser.newPage();
-            
-            // Set content and wait for images/QR to load
-            await page.setContent(html, { waitUntil: 'networkidle0' });
+            await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
             
             const pdfBuffer = await page.pdf({
                 format: 'A4',
@@ -88,9 +112,9 @@ app.get('/generate-rc', async (req, res) => {
 
             await browser.close();
 
-            // 3. Send PDF as a Direct Download (User never sees HTML/Source)
-            res.setHeader('Content-Disposition', `attachment; filename="RC_${vehicleId}.pdf"`);
+            // Send as direct download
             res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', `attachment; filename=RC_${vehicleId}.pdf`);
             res.send(pdfBuffer);
 
         } else {
@@ -104,5 +128,5 @@ app.get('/generate-rc', async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`🚀 Secure Server: http://localhost:${PORT}/generate-rc?id=up62bz1861&key=xxc`);
+    console.log(`🚀 Secure Server: Port ${PORT}`);
 });
