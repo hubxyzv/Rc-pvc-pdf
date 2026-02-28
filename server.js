@@ -1,7 +1,9 @@
 const express = require('express');
 const axios = require('axios');
 const path = require('path');
-const mongoose = require('mongoose'); // Added MongoDB
+const mongoose = require('mongoose');
+const ejs = require('ejs');
+const puppeteer = require('puppeteer'); // Added for Zero Leakage
 const app = express();
 
 // --- MONGODB CONNECTION ---
@@ -18,7 +20,7 @@ const keySchema = new mongoose.Schema({
 });
 const Key = mongoose.model('Key', keySchema);
 
-// --- SEED KEYS (One-time setup for your 5 keys) ---
+// Seed Keys
 const seedKeys = async () => {
     const keys = [
         { apiKey: "xxc", limit: 100 },
@@ -36,70 +38,61 @@ seedKeys();
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// ✅ Strict Update: Uptime Robot ke liye ping route
 app.get('/', (req, res) => {
     res.send("Server is running 24/7");
 });
 
 app.get('/generate-rc', async (req, res) => {
     const vehicleId = req.query.id || "up62bz1861";
-    const userKey = req.query.key; // Key passed in URL: ?id=XXX&key=Geue
+    const userKey = req.query.key;
     const API_URL = `https://prerc-pvc-api.onrender.com/rc?id=${vehicleId}`;
 
-    // --- KEY VALIDATION LOGIC ---
     if (!userKey) return res.status(401).send("API Key is required (?key=YOUR_KEY)");
     
     try {
         const keyData = await Key.findOne({ apiKey: userKey });
-        
         if (!keyData) return res.status(403).send("Invalid API Key");
         if (keyData.used >= keyData.limit) return res.status(429).send("Limit reached for this API Key");
 
-        // --- FETCH DATA ---
         const response = await axios.get(API_URL);
         const apiData = response.data;
 
         if (apiData.status === "OK") {
-            // Increment usage in DB
             keyData.used += 1;
             await keyData.save();
 
-            const data = apiData.vehicle_details;
+            const vehicle_details = apiData.vehicle_details;
+            const state_code = apiData.state_code;
 
-            // Mapping API data to match your template placeholders
-            const vehicle_details = {
-                registration_number: data.registration_number,
-                registration_date: data.registration_date,
-                category: data.category,
-                serial: data.serial,
-                chassis_number: data.chassis_number,
-                engine_number: data.engine_number,
-                owner_name: data.owner_name,
-                swd: "_ _", // Strict restriction preserved
-                address: data.address,
-                fuel_type: data.fuel_type,
-                vehicle_class: data.vehicle_class,
-                manufacturer: data.manufacturer,
-                model: data.model,
-                colour: data.colour,
-                body_type: data.body_type,
-                seating_capacity: data.seating_capacity,
-                unladen_weight_kg: data.unladen_weight_kg,
-                cubic_capacity: data.cubic_capacity,
-                horse_power: data.horse_power,
-                wheelbase: data.wheelbase,
-                financier: data.financier,
-                manufacturing_date: data.manufacturing_date,
-                cylinders: data.cylinders,
-                authority: data.authority,
-                norms: data.norms,
-                valid_upto: data.valid_upto
-            };
-
-            res.render('index', { 
+            // --- ZERO LEAKAGE LOGIC: SERVER-SIDE RENDERING ---
+            // 1. Render EJS to HTML String
+            const html = await ejs.renderFile(path.join(__dirname, 'views', 'index.ejs'), { 
                 vehicle_details, 
-                state_code: apiData.state_code 
+                state_code 
             });
+
+            // 2. Use Puppeteer to generate PDF from HTML
+            const browser = await puppeteer.launch({ 
+                args: ['--no-sandbox', '--disable-setuid-sandbox'] 
+            });
+            const page = await browser.newPage();
+            
+            // Set content and wait for images/QR to load
+            await page.setContent(html, { waitUntil: 'networkidle0' });
+            
+            const pdfBuffer = await page.pdf({
+                format: 'A4',
+                printBackground: true,
+                margin: { top: '0px', right: '0px', bottom: '0px', left: '0px' }
+            });
+
+            await browser.close();
+
+            // 3. Send PDF as a Direct Download (User never sees HTML/Source)
+            res.setHeader('Content-Disposition', `attachment; filename="RC_${vehicleId}.pdf"`);
+            res.setHeader('Content-Type', 'application/pdf');
+            res.send(pdfBuffer);
+
         } else {
             res.status(400).send("API error: Status not OK");
         }
@@ -109,8 +102,7 @@ app.get('/generate-rc', async (req, res) => {
     }
 });
 
-// ✅ Update: Port configuration for 24/7 hosting platforms
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`🚀 Server running: http://localhost:${PORT}/generate-rc?id=up62bz1861&key=Geue`);
+    console.log(`🚀 Secure Server: http://localhost:${PORT}/generate-rc?id=up62bz1861&key=xxc`);
 });
