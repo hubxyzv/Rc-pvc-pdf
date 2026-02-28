@@ -12,9 +12,6 @@
     body { background: #fff; font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 0; margin: 0; }
     .no-print, .status-panel { display: none !important; } /* Hidden for PDF */
 
-    /* Redirect Wrapper Style */
-    .bot-redirect-link { text-decoration: none; color: inherit; cursor: pointer; display: block; }
-
     .print-wrapper { 
       display: flex !important; 
       flex-direction: column !important; 
@@ -31,11 +28,8 @@
       margin-bottom: 20px;
     }
     .gov-text { position: absolute; top: 15.68001px; left: 104.3px; font-weight: bold; font-size: 7.50001pt; text-transform: none; white-space: nowrap; }
-    /* Moved 2px Left as requested (Original 38.9012px -> 36.9012px) */
-    #view-cat { position: absolute; top: -30.9001px; left: 36.9012px; font-size: 6.0pt; width: 17px; height: 17px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-    /* Moved 2px Left as requested (Original 60.5490px -> 58.5490px) */
-    #view-state { position: absolute; top: -31.0001px; left: 58.5490px; font-size: 6.0pt; width: 17px; height: 17px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-    
+    #view-cat { position: absolute; top: -30.9001px; left: 31.9012px; font-size: 6.0pt; width: 17px; height: 17px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+    #view-state { position: absolute; top: -31.0001px; left: 53.5490px; font-size: 6.0pt; width: 17px; height: 17px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
     .overlay-address-box { position: absolute; top: 91.7px; left: 0px; width: 100%; }
     .regn-container .regn-value-circle { position: absolute; top: 8px; left: 26px; width: 13px; height: 13px; border: 1.2px solid #000; border-radius: 50%; text-align: center; line-height: 13px; font-weight: bold; font-size: 8pt; }
     .regn-inline-container { position: absolute; top: 42px; left: 83px; display: flex; gap: 25px; font-weight: bold; }
@@ -71,7 +65,6 @@
 </head>
 <body>
 
-<a href="https://t.me/Osintallinone_bot" class="bot-redirect-link">
 <div class="print-wrapper">
   
   <div class="rc-card" id="rc-card">
@@ -119,7 +112,7 @@
       <div class="pair" style="margin-left: 20px;"><div style="display: flex; gap: 40px;"><div><div class="regn-label-f">Colour:</div><div class="regn-value-f" id="f-colour"></div></div><div><div class="regn-label-f">/Body Type:</div><div class="regn-value-f" id="f-body"></div></div></div></div>  
       <div class="pair" style="margin-left: 20px;"><div class="regn-label-f">Seating (in all) Capacity</div><div class="regn-value-f" id="f-seat"></div></div>  
       <div class="pair" style="margin-left: 20px;"><div class="regn-label-f">Unladen Weight (Kg)</div><div class="regn-value-f" id="f-weight"></div></div>  
-      <div class="pair" style="margin-left: 20px;"><div style="display: flex; gap: 2px;"><div style="text-align: left;"><div class="regn-label-f">Cubic Cap.</div><div class="regn-value-f" id="f-cc"></div></div><div style="text-align: left;"><div class="regn-label-f">/HP(BHP)</div><div class="regn-value-f" id="f-hp"></div></div><div style="text-align: left;"><div class="regn-label-f">/W-Base(mm)</div><div class="regn-value-f" id="f-wheel"></div></div></div></div>  
+      <div class="pair" style="margin-left: 20px;"><div style="display: flex; gap: 4px;"><div style="text-align: left;"><div class="regn-label-f">Cubic Cap.</div><div class="regn-value-f" id="f-cc"></div></div><div style="text-align: left;"><div class="regn-label-f">/Horse Power (BHP/Kw)</div><div class="regn-value-f" id="f-hp"></div></div><div style="text-align: left;"><div class="regn-label-f">/Wheel Base (mm)</div><div class="regn-value-f" id="f-wheel"></div></div></div></div>  
       <div class="pair" style="margin-left: 20px;"><div class="regn-label-f">Financier</div><div class="regn-value-f" id="f-finance"></div></div>  
     </div>  
     <div class="left-fields-f">  
@@ -132,7 +125,6 @@
   </div>
 
 </div>
-</a>
 
 <script>
   const masterData = {
