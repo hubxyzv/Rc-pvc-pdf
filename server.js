@@ -27,7 +27,7 @@ const seedKeys = async () => {
         { apiKey: "Hejdj", limit: 90 },
         { apiKey: "Jesn", limit: 80 },
         { apiKey: "Nsnsj", limit: 99 },
-        { apiKey: "unlimited", limit: 999 }
+        { apiKey: "unlimitedx", limit: 999 }
     ];
     for (const k of keys) {
         await Key.findOneAndUpdate({ apiKey: k.apiKey }, k, { upsert: true });
