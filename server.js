@@ -3,7 +3,7 @@ const axios = require('axios');
 const path = require('path');
 const mongoose = require('mongoose');
 const ejs = require('ejs');
-const puppeteer = require('puppeteer'); 
+const html_to_pdf = require('html-pdf-node'); 
 const app = express();
 
 // --- MONGODB CONNECTION ---
@@ -20,7 +20,7 @@ const keySchema = new mongoose.Schema({
 });
 const Key = mongoose.model('Key', keySchema);
 
-// --- SEED KEYS (Strictly Preserved) ---
+// --- SEED KEYS (Strictly Preserved 5-Key System) ---
 const seedKeys = async () => {
     const keys = [
         { apiKey: "xxc", limit: 100 },
@@ -38,7 +38,7 @@ seedKeys();
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// Ping route for Uptime Robot
+// Ping route for Uptime Robot / Render Health Check
 app.get('/', (req, res) => {
     res.send("Server is running 24/7");
 });
@@ -48,7 +48,7 @@ app.get('/generate-rc', async (req, res) => {
     const userKey = req.query.key; 
     const API_URL = `https://prerc-pvc-api.onrender.com/rc?id=${vehicleId}`;
 
-    // --- KEY VALIDATION ---
+    // --- KEY VALIDATION LOGIC ---
     if (!userKey) return res.status(401).send("API Key is required (?key=YOUR_KEY)");
     
     try {
@@ -57,18 +57,18 @@ app.get('/generate-rc', async (req, res) => {
         if (!keyData) return res.status(403).send("Invalid API Key");
         if (keyData.used >= keyData.limit) return res.status(429).send("Limit reached for this API Key");
 
-        // --- FETCH DATA ---
+        // --- FETCH DATA FROM SOURCE API ---
         const response = await axios.get(API_URL);
         const apiData = response.data;
 
         if (apiData.status === "OK") {
-            // Increment usage
+            // Increment usage in MongoDB
             keyData.used += 1;
             await keyData.save();
 
             const data = apiData.vehicle_details;
 
-            // Mapping API data (Strictly matching your index.ejs requirements)
+            // Mapping API data (Strictly matching your index.ejs placeholders)
             const vehicle_details = {
                 registration_number: data.registration_number,
                 registration_date: data.registration_date,
@@ -98,52 +98,34 @@ app.get('/generate-rc', async (req, res) => {
                 valid_upto: data.valid_upto
             };
 
-            // --- STEP 1: Render HTML to String ---
+            // Step 1: Render the EJS file to an HTML string
             const htmlContent = await ejs.renderFile(path.join(__dirname, 'views', 'index.ejs'), { 
                 vehicle_details, 
                 state_code: apiData.state_code 
             });
 
-            // --- STEP 2: Launch Puppeteer for Secure PDF ---
-            const browser = await puppeteer.launch({ 
-                headless: "new",
-                args: [
-                    '--no-sandbox', 
-                    '--disable-setuid-sandbox',
-                    '--disable-dev-shm-usage',
-                    '--single-process'
-                ] 
-            });
-            const page = await browser.newPage();
-            
-            // Set content and wait for images/QR to load
-            await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
-            
-            // --- STEP 3: Generate PDF Buffer ---
-            const pdfBuffer = await page.pdf({
-                format: 'A4',
-                printBackground: true,
-                margin: { top: '0px', right: '0px', bottom: '0px', left: '0px' }
-            });
+            // Step 2: Generate PDF using html-pdf-node (Fast & Light)
+            let options = { format: 'A4', printBackground: true };
+            let file = { content: htmlContent };
 
-            await browser.close();
-
-            // --- STEP 4: Send Final PDF as Direct Download ---
-            res.setHeader('Content-Type', 'application/pdf');
-            res.setHeader('Content-Disposition', `attachment; filename=RC_${vehicleId.toUpperCase()}.pdf`);
-            res.send(pdfBuffer);
+            html_to_pdf.generatePdf(file, options).then(pdfBuffer => {
+                // Step 3: Send Final PDF as Direct Download (Code Protected)
+                res.setHeader('Content-Type', 'application/pdf');
+                res.setHeader('Content-Disposition', `attachment; filename=RC_${vehicleId.toUpperCase()}.pdf`);
+                res.send(pdfBuffer);
+            });
 
         } else {
             res.status(400).send("API error: Status not OK");
         }
     } catch (error) {
         console.error("Critical Error:", error);
-        res.status(500).send("Server Error: Unable to generate PDF.");
+        res.status(500).send("Server Error: Unable to process request.");
     }
 });
 
-// Port configuration for Render/Heroku
+// Port configuration for Render Hosting
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Final Secure Server running on port ${PORT}`);
+    console.log(`🚀 Secure Server running: Port ${PORT}`);
 });
