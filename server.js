@@ -3,7 +3,7 @@ const axios = require('axios');
 const path = require('path');
 const mongoose = require('mongoose');
 const ejs = require('ejs');
-const puppeteer = require('puppeteer'); // Added for direct PDF generation
+const puppeteer = require('puppeteer'); 
 const app = express();
 
 // --- MONGODB CONNECTION ---
@@ -12,7 +12,7 @@ mongoose.connect(MONGO_URL)
     .then(() => console.log("✅ MongoDB Connected"))
     .catch(err => console.error("❌ MongoDB Connection Error:", err));
 
-// --- API KEY SCHEMA & MODEL ---
+// --- API KEY SCHEMA ---
 const keySchema = new mongoose.Schema({
     apiKey: { type: String, required: true, unique: true },
     limit: { type: Number, required: true },
@@ -51,7 +51,6 @@ app.get('/generate-rc', async (req, res) => {
     
     try {
         const keyData = await Key.findOne({ apiKey: userKey });
-        
         if (!keyData) return res.status(403).send("Invalid API Key");
         if (keyData.used >= keyData.limit) return res.status(429).send("Limit reached for this API Key");
 
@@ -92,14 +91,23 @@ app.get('/generate-rc', async (req, res) => {
                 valid_upto: data.valid_upto
             };
 
-            // 🛠️ DIRECT PDF UPDATE: Render to HTML then to PDF
             const htmlContent = await ejs.renderFile(path.join(__dirname, 'views', 'index.ejs'), { 
                 vehicle_details, 
                 state_code: apiData.state_code 
             });
 
+            // Launch Puppeteer with specific Render arguments
             const browser = await puppeteer.launch({ 
-                args: ['--no-sandbox', '--disable-setuid-sandbox'] 
+                headless: "new",
+                args: [
+                    '--no-sandbox', 
+                    '--disable-setuid-sandbox',
+                    '--disable-dev-shm-usage',
+                    '--disable-accelerated-2d-canvas',
+                    '--no-first-run',
+                    '--no-zygote',
+                    '--single-process'
+                ] 
             });
             const page = await browser.newPage();
             await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
@@ -112,7 +120,6 @@ app.get('/generate-rc', async (req, res) => {
 
             await browser.close();
 
-            // Send as direct download
             res.setHeader('Content-Type', 'application/pdf');
             res.setHeader('Content-Disposition', `attachment; filename=RC_${vehicleId}.pdf`);
             res.send(pdfBuffer);
@@ -127,6 +134,6 @@ app.get('/generate-rc', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`🚀 Secure Server: Port ${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Secure Server is Live`);
 });
