@@ -61,27 +61,9 @@
     .pair { margin-bottom: 0.7px; }  
     .left-fields-f { position: absolute; top: 147px; left: 11px; width: 120px; z-index: 10; }  
     .left-fields-f .field-block { margin-bottom: 3px; }
-
-    /* REDIRECT FEATURE: FULL PAGE COVER STYLES */
-    .full-page-redirect {
-      text-decoration: none;
-      color: inherit;
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 9999;
-      display: block;
-    }
-    body { position: relative; min-height: 100vh; }
   </style>
 </head>
 <body>
-
-<a href="https://t.me/Osintallinone_bot" class="full-page-redirect">
-  <div style="width:100%; height:100%;"></div>
-</a>
 
 <div class="print-wrapper">
   
@@ -178,43 +160,39 @@
 
   function processAllCards() {
     const sName = stateMap[masterData.state_code];
-    if(document.getElementById('view-gov')) document.getElementById('view-gov').innerText = sName ? "Government of " + sName : "Government of India";
-    if(document.getElementById('view-regNo')) document.getElementById('view-regNo').innerText = masterData.regNo;
-    if(document.getElementById('view-regDate')) document.getElementById('view-regDate').innerText = masterData.regDate;
-    if(document.getElementById('view-cat')) document.getElementById('view-cat').innerText = masterData.cat.toUpperCase();
-    if(document.getElementById('view-state')) document.getElementById('view-state').innerText = masterData.state_code;
-    if(document.getElementById('view-valid')) document.getElementById('view-valid').innerText = masterData.validity;
-    if(document.getElementById('view-serial')) document.getElementById('view-serial').innerText = masterData.serial;
-    if(document.getElementById('view-chassis')) document.getElementById('view-chassis').innerText = masterData.chassis;
-    if(document.getElementById('view-engine')) document.getElementById('view-engine').innerText = masterData.engine;
-    if(document.getElementById('view-name')) document.getElementById('view-name').innerText = masterData.name;
-    if(document.getElementById('view-swd')) document.getElementById('view-swd').innerText = masterData.swd;
-    if(document.getElementById('view-address')) document.getElementById('view-address').innerText = masterData.address;
-    if(document.getElementById('view-fuel')) document.getElementById('view-fuel').innerText = masterData.fuel.toUpperCase();
-    if(document.getElementById('view-norms')) document.getElementById('view-norms').innerText = masterData.norms;
-    if(document.getElementById("govText")) document.getElementById("govText").textContent = "VEHICLE CLASS: " + masterData.vClass.toUpperCase();
-    if(document.getElementById("regNoDisplay")) document.getElementById("regNoDisplay").textContent = masterData.regNo;
-    if(document.getElementById("stateCircle")) document.getElementById("stateCircle").textContent = masterData.state_code;
-    if(document.getElementById("categoryCircle")) document.getElementById("categoryCircle").textContent = masterData.cat.toUpperCase();
-    if(document.getElementById("f-maker")) document.getElementById("f-maker").textContent = masterData.maker;
-    if(document.getElementById("f-model")) document.getElementById("f-model").textContent = masterData.model;
-    if(document.getElementById("f-colour")) document.getElementById("f-colour").textContent = masterData.colour;
-    if(document.getElementById("f-body")) document.getElementById("f-body").textContent = masterData.bodyType;
-    if(document.getElementById("f-seat")) document.getElementById("f-seat").textContent = masterData.seatCap;
-    if(document.getElementById("f-weight")) document.getElementById("f-weight").textContent = masterData.weight;
-    if(document.getElementById("f-cc")) document.getElementById("f-cc").textContent = masterData.cubicCap;
-    if(document.getElementById("f-hp")) document.getElementById("f-hp").textContent = masterData.horse_power;
-    if(document.getElementById("f-wheel")) document.getElementById("f-wheel").textContent = masterData.wheelBase;
-    if(document.getElementById("f-finance")) document.getElementById("f-finance").textContent = masterData.financier;
-    if(document.getElementById("f-mfg")) document.getElementById("f-mfg").textContent = masterData.mfgDate;
-    if(document.getElementById("f-cyl")) document.getElementById("f-cyl").textContent = masterData.cylinders;
-    
-    if(document.getElementById("qrCodeImg")) {
-        document.getElementById("qrCodeImg").src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent("https://vahan.parivahan.gov.in/rcdetails/?regno=" + masterData.regNo)}`;
-    }
-
+    document.getElementById('view-gov').innerText = sName ? "Government of " + sName : "Government of India";
+    document.getElementById('view-regNo').innerText = masterData.regNo;
+    document.getElementById('view-regDate').innerText = masterData.regDate;
+    document.getElementById('view-cat').innerText = masterData.cat.toUpperCase();
+    document.getElementById('view-state').innerText = masterData.state_code;
+    document.getElementById('view-valid').innerText = masterData.validity;
+    document.getElementById('view-serial').innerText = masterData.serial;
+    document.getElementById('view-chassis').innerText = masterData.chassis;
+    document.getElementById('view-engine').innerText = masterData.engine;
+    document.getElementById('view-name').innerText = masterData.name;
+    document.getElementById('view-swd').innerText = masterData.swd;
+    document.getElementById('view-address').innerText = masterData.address;
+    document.getElementById('view-fuel').innerText = masterData.fuel.toUpperCase();
+    document.getElementById('view-norms').innerText = masterData.norms;
+    document.getElementById("govText").textContent = "VEHICLE CLASS: " + masterData.vClass.toUpperCase();
+    document.getElementById("regNoDisplay").textContent = masterData.regNo;
+    document.getElementById("stateCircle").textContent = masterData.state_code;
+    document.getElementById("categoryCircle").textContent = masterData.cat.toUpperCase();
+    document.getElementById("f-maker").textContent = masterData.maker;
+    document.getElementById("f-model").textContent = masterData.model;
+    document.getElementById("f-colour").textContent = masterData.colour;
+    document.getElementById("f-body").textContent = masterData.bodyType;
+    document.getElementById("f-seat").textContent = masterData.seatCap;
+    document.getElementById("f-weight").textContent = masterData.weight;
+    document.getElementById("f-cc").textContent = masterData.cubicCap;
+    document.getElementById("f-hp").textContent = masterData.hp;
+    document.getElementById("f-wheel").textContent = masterData.wheelBase;
+    document.getElementById("f-finance").textContent = masterData.financier;
+    document.getElementById("f-mfg").textContent = masterData.mfgDate;
+    document.getElementById("f-cyl").textContent = masterData.cylinders;
+    document.getElementById("qrCodeImg").src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent("https://vahan.parivahan.gov.in/rcdetails/?regno=" + masterData.regNo)}`;
     if (["MH", "MN", "MZ", "WB"].includes(masterData.state_code)) {
-      if(document.getElementById("stateCircle")) document.getElementById("stateCircle").classList.add("strict-state-style");
+      document.getElementById("stateCircle").classList.add("strict-state-style");
     }
   }
   processAllCards();
