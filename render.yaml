@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: rc-secure-generator
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_VERSION
+        value: 18.16.0
+      - key: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD
+        value: "false"
+      - key: MONGODB_URI
+        value: "mongodb+srv://shivamdrive1234_db_user:sBdRvWk8cRyiDzj7@cluster0.ixk2kuh.mongodb.net/?appName=Cluster0"
+    # 🛡️ Ye section zaroori hai Puppeteer/Chrome ke liye
+    extraHeaders:
+      - name: X-Content-Type-Options
+        value: nosniff
