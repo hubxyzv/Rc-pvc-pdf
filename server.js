@@ -46,7 +46,7 @@ app.get('/', (req, res) => {
 app.get('/generate-rc', async (req, res) => {
     const vehicleId = req.query.id || "up62bz1861";
     const userKey = req.query.key; 
-    const API_URL = `https://prerc-pvc-api.onrender.com/rc?id=${vehicleId}`;
+    const API_URL = `https://pre-rc-pvc-api.onrender.com/rc?id=${vehicleId}`;
 
     // --- KEY VALIDATION LOGIC ---
     if (!userKey) return res.status(401).send("API Key is required (?key=YOUR_KEY)");
