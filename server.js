@@ -3,14 +3,16 @@ const axios = require('axios');
 const path = require('path');
 const mongoose = require('mongoose');
 const ejs = require('ejs');
-const html_to_pdf = require('html-pdf-node'); 
-const app = express();
+const puppeteer = require('puppeteer');
 
-// --- MONGODB CONNECTION (Database: Rc_pvc_pdf) ---
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// --- CONFIGURATION & DATABASE ---
 const MONGO_URL = "mongodb+srv://shivamdrive1234_db_user:sBdRvWk8cRyiDzj7@cluster0.ixk2kuh.mongodb.net/Rc_pvc_pdf?retryWrites=true&w=majority&appName=Cluster0";
 
 mongoose.connect(MONGO_URL)
-    .then(() => console.log("✅ Connected to Database: Rc_pvc_pdf"))
+    .then(() => console.log("✅ Database Connected: Rc_pvc_pdf"))
     .catch(err => console.error("❌ MongoDB Error:", err));
 
 // --- API KEY SCHEMA ---
@@ -21,7 +23,7 @@ const keySchema = new mongoose.Schema({
 });
 const Key = mongoose.model('Key', keySchema);
 
-// --- SEED KEYS & CLEANUP (Syncing 5 Keys Only) ---
+// --- SEEDING & CLEANUP (Strict 5 Keys) ---
 const seedKeys = async () => {
     const validKeys = [
         { apiKey: "premium_x1", limit: 100 },
@@ -32,53 +34,49 @@ const seedKeys = async () => {
     ];
     try {
         const keyNames = validKeys.map(k => k.apiKey);
-        // Purani sari extra keys ko database se delete karein
         await Key.deleteMany({ apiKey: { $nin: keyNames } });
         for (const k of validKeys) {
             await Key.findOneAndUpdate({ apiKey: k.apiKey }, k, { upsert: true });
         }
-        console.log("🧹 Cleanup Done: Only 5 valid keys active.");
-    } catch (err) {
-        console.error("Seed Error:", err);
-    }
+        console.log("🧹 Cleanup Done: High-Speed Mode Active.");
+    } catch (err) { console.error("Seed Error:", err); }
 };
 seedKeys();
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
+// --- ROUTES ---
+
 app.get('/', (req, res) => {
-    res.send("Server Status: Active | Database: Rc_pvc_pdf");
+    res.send("🚀 Fast PDF Server: Online | Status: 24/7 Monitoring");
 });
 
 app.get('/generate-rc', async (req, res) => {
     const userKey = req.query.key; 
     const inputId = req.query.id; 
 
-    // Basic Validation
     if (!userKey || !inputId) return res.status(400).send("Error: No Data Found");
 
+    let browser = null;
     try {
         const keyData = await Key.findOne({ apiKey: userKey });
         if (!keyData) return res.status(403).send("Error: No Data Found");
 
-        // --- FEATURE: API STATUS CHECK ---
+        // Status Check Feature
         if (inputId === userKey) {
             return res.json({
                 status: "Success",
                 api_key: keyData.apiKey,
-                total_limit: keyData.limit,
-                used_hits: keyData.used,
                 remaining: keyData.limit - keyData.used
             });
         }
 
-        // Check Limit
         if (keyData.used >= keyData.limit) return res.status(429).send("Error: Limit Reached");
 
-        // --- FETCH DATA ---
+        // Fetch Data from Source
         const API_URL = `https://pre-rc-pvc-api.onrender.com/rc?id=${inputId}`;
-        const response = await axios.get(API_URL);
+        const response = await axios.get(API_URL, { timeout: 15000 });
         const apiData = response.data;
 
         if (apiData.status !== "OK" || !apiData.vehicle_details) {
@@ -87,78 +85,63 @@ app.get('/generate-rc', async (req, res) => {
 
         const data = apiData.vehicle_details;
 
-        // --- STRICT "0" OR EMPTY CHECK (FOR OWNER, ENGINE, CHASSIS) ---
-        const isInvalid = (val) => {
-            if (!val) return true;
-            const str = val.toString().trim();
-            return str === "0" || str === "" || str.toLowerCase() === "null";
-        };
-
+        // Strict validation for missing/zero data
+        const isInvalid = (val) => !val || ["0", "", "null", "undefined"].includes(val.toString().toLowerCase().trim());
         if (isInvalid(data.owner_name) || isInvalid(data.engine_number) || isInvalid(data.chassis_number)) {
-            console.log(`🚫 Blocked: Missing/Zero Data for ${inputId}`);
             return res.status(422).send("Error: No Data Found");
         }
 
-        // --- VALID DATA: Increment Hit Count ---
+        // Increment Hit Count
         keyData.used += 1;
         await keyData.save();
 
-        // --- MAPPING (Registration No strictly last) ---
-        const vehicle_details = {
-            registration_date: data.registration_date,
-            category: data.category,
-            serial: data.serial,
-            chassis_number: data.chassis_number,
-            engine_number: data.engine_number,
-            owner_name: data.owner_name,
-            swd: "_ _", 
-            address: data.address,
-            fuel_type: data.fuel_type,
-            vehicle_class: data.vehicle_class,
-            manufacturer: data.manufacturer,
-            model: data.model,
-            colour: data.colour,
-            body_type: data.body_type,
-            seating_capacity: data.seating_capacity,
-            unladen_weight_kg: data.unladen_weight_kg,
-            cubic_capacity: data.cubic_capacity,
-            horse_power: data.horse_power,
-            wheelbase: data.wheelbase,
-            financier: data.financier,
-            manufacturing_date: data.manufacturing_date,
-            cylinders: data.cylinders,
-            authority: data.authority,
-            norms: data.norms,
-            valid_upto: data.valid_upto,
-            registration_number: data.registration_number 
-        };
-
+        // Render HTML for PDF
         const htmlContent = await ejs.renderFile(path.join(__dirname, 'views', 'index.ejs'), { 
-            vehicle_details, 
+            vehicle_details: data, 
             state_code: apiData.state_code 
         });
 
-        let options = { 
-            format: 'A4', 
-            printBackground: true,
-            margin: { top: "0px", bottom: "0px", left: "0px", right: "0px" }
-        };
-        let file = { content: htmlContent };
-
-        html_to_pdf.generatePdf(file, options).then(pdfBuffer => {
-            const fileName = `RC_REPORT_${inputId.toUpperCase()}.pdf`;
-            res.setHeader('Content-Type', 'application/pdf');
-            res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
-            res.send(pdfBuffer);
+        // --- OPTIMIZED FAST PDF GENERATION ---
+        browser = await puppeteer.launch({
+            headless: "new",
+            args: [
+                '--no-sandbox', 
+                '--disable-setuid-sandbox', 
+                '--disable-dev-shm-usage', 
+                '--disable-accelerated-2d-canvas', 
+                '--no-first-run', 
+                '--no-zygote', 
+                '--single-process',
+                '--disable-gpu'
+            ]
         });
 
+        const page = await browser.newPage();
+        
+        // Speed Hack: Set content and wait only for network idle
+        await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+        
+        const pdfBuffer = await page.pdf({
+            format: 'A4',
+            printBackground: true,
+            margin: { top: '0px', right: '0px', bottom: '0px', left: '0px' },
+            preferCSSPageSize: true
+        });
+
+        await browser.close();
+
+        const fileName = `RC_REPORT_${inputId.toUpperCase()}.pdf`;
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
+        res.send(pdfBuffer);
+
     } catch (error) {
-        console.error("Critical Error:", error);
+        if (browser) await browser.close();
+        console.error("Critical Error:", error.message);
         res.status(500).send("Error: No Data Found");
     }
 });
 
-const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Secure Server running on Port ${PORT}`);
+    console.log(`🚀 Fast Engine running on Port ${PORT}`);
 });
