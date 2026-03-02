@@ -56,8 +56,8 @@ const calculateKw = (hpRaw, ccRaw) => {
 const formatToEnglishDate = (dateStr) => {
     if (!isValid(dateStr)) return "0";
     try {
-        // FIXED: Hyphen moved to the end to prevent SyntaxError: Range out of order
-        const parts = dateStr.split(/[/ -]/); 
+        // FIXED: Regex updated to /[ / -]/ to prevent Range out of order error
+        const parts = dateStr.split(/[ / -]/); 
         if (parts.length < 3) return String(dateStr).toUpperCase();
         let day = parts[0].padStart(2, '0');
         let m = isNaN(parts[1]) ? parts[1].toUpperCase().substring(0,3) : monthNames[parseInt(parts[1]) - 1];
