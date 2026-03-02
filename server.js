@@ -20,14 +20,14 @@ const keySchema = new mongoose.Schema({
 });
 const Key = mongoose.model('Key', keySchema);
 
-// --- SEED KEYS (Updated API Keys - Strictly Preserved 5-Key System) ---
+// --- SEED KEYS (Updated Unlimited & 5-Key System) ---
 const seedKeys = async () => {
     const keys = [
         { apiKey: "premium_x1", limit: 100 },
         { apiKey: "gold_y2", limit: 90 },
         { apiKey: "silver_z3", limit: 80 },
         { apiKey: "bronze_a4", limit: 99 },
-        { apiKey: "admin_unlimited", limit: 999 }
+        { apiKey: "admin_unlimited", limit: 999999 } // Change: Strictly set to Unlimited
     ];
     for (const k of keys) {
         await Key.findOneAndUpdate({ apiKey: k.apiKey }, k, { upsert: true });
@@ -44,9 +44,10 @@ app.get('/', (req, res) => {
 });
 
 app.get('/generate-rc', async (req, res) => {
-    // Key validation happens first
+    // URL Logic: Key pehle, ID last mein
     const userKey = req.query.key; 
     
+    // 1. KEY VALIDATION
     if (!userKey) return res.status(401).send("API Key is required (?key=YOUR_KEY)");
     
     try {
@@ -55,7 +56,7 @@ app.get('/generate-rc', async (req, res) => {
         if (!keyData) return res.status(403).send("Invalid API Key");
         if (keyData.used >= keyData.limit) return res.status(429).send("Limit reached for this API Key");
 
-        // --- VEHICLE ID AT THE END OF INPUT ---
+        // 2. VEHICLE ID PROCESSING (Strictly at the end of input)
         const vehicleId = req.query.id; 
         if (!vehicleId) return res.status(400).send("Vehicle ID is required (?id=VEHICLE_NO)");
 
@@ -65,9 +66,9 @@ app.get('/generate-rc', async (req, res) => {
         const response = await axios.get(API_URL);
         const apiData = response.data;
 
-        // --- WRONG VEHICLE ERROR CHECK ---
+        // --- WRONG VEHICLE CHECK ---
         if (apiData.status !== "OK" || !apiData.vehicle_details) {
-            return res.status(404).send(`❌ Error: Vehicle number "${vehicleId}" is invalid or not found.`);
+            return res.status(404).send(`❌ Error: Vehicle number "${vehicleId}" is invalid or not found in records.`);
         }
 
         // Increment usage in MongoDB
@@ -103,7 +104,7 @@ app.get('/generate-rc', async (req, res) => {
             authority: data.authority,
             norms: data.norms,
             valid_upto: data.valid_upto,
-            // UPDATED: vehicle no (registration_number) at the very last
+            // UPDATED: registration_number added last (End of mapping)
             registration_number: data.registration_number 
         };
 
@@ -114,7 +115,11 @@ app.get('/generate-rc', async (req, res) => {
         });
 
         // Step 2: Generate PDF using html-pdf-node
-        let options = { format: 'A4', printBackground: true };
+        let options = { 
+            format: 'A4', 
+            printBackground: true,
+            margin: { top: "0px", bottom: "0px", left: "0px", right: "0px" }
+        };
         let file = { content: htmlContent };
 
         html_to_pdf.generatePdf(file, options).then(pdfBuffer => {
@@ -127,7 +132,7 @@ app.get('/generate-rc', async (req, res) => {
 
     } catch (error) {
         console.error("Critical Error:", error);
-        res.status(500).send("Server Error: Request could not be completed.");
+        res.status(500).send("Server Error: Unable to process request.");
     }
 });
 
