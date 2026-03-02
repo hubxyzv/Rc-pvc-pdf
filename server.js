@@ -10,10 +10,10 @@ const app = express();
 const MONGO_URL = "mongodb+srv://shivamdrive1234_db_user:sBdRvWk8cRyiDzj7@cluster0.ixk2kuh.mongodb.net/Rc_pvc_pdf?retryWrites=true&w=majority&appName=Cluster0";
 
 mongoose.connect(MONGO_URL)
-    .then(() => console.log("✅ MongoDB Connected to Rc_pvc_pdf"))
-    .catch(err => console.error("❌ MongoDB Connection Error:", err));
+    .then(() => console.log("✅ Connected to Database: Rc_pvc_pdf"))
+    .catch(err => console.error("❌ MongoDB Error:", err));
 
-// --- API KEY SCHEMA & MODEL ---
+// --- API KEY SCHEMA ---
 const keySchema = new mongoose.Schema({
     apiKey: { type: String, required: true, unique: true },
     limit: { type: Number, required: true },
@@ -21,7 +21,7 @@ const keySchema = new mongoose.Schema({
 });
 const Key = mongoose.model('Key', keySchema);
 
-// --- STRICT CLEANUP & SEED KEYS (New 5-Key System) ---
+// --- SEED KEYS & CLEANUP (Syncing 5 Keys Only) ---
 const seedKeys = async () => {
     const validKeys = [
         { apiKey: "premium_x1", limit: 100 },
@@ -32,12 +32,12 @@ const seedKeys = async () => {
     ];
     try {
         const keyNames = validKeys.map(k => k.apiKey);
-        // Delete any key not in the new valid list
+        // Purani sari extra keys ko database se delete karein
         await Key.deleteMany({ apiKey: { $nin: keyNames } });
         for (const k of validKeys) {
             await Key.findOneAndUpdate({ apiKey: k.apiKey }, k, { upsert: true });
         }
-        console.log("✨ API Keys Synced & Old Keys Cleaned");
+        console.log("🧹 Cleanup Done: Only 5 valid keys active.");
     } catch (err) {
         console.error("Seed Error:", err);
     }
@@ -47,22 +47,20 @@ seedKeys();
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// Health Check
 app.get('/', (req, res) => {
-    res.send("Server is running 24/7 on Database: Rc_pvc_pdf");
+    res.send("Server Status: Active | Database: Rc_pvc_pdf");
 });
 
 app.get('/generate-rc', async (req, res) => {
     const userKey = req.query.key; 
     const inputId = req.query.id; 
 
-    // Basic Validations
-    if (!userKey) return res.status(401).send("API Key is required (?key=YOUR_KEY)");
-    if (!inputId) return res.status(400).send("Input ID is required (?id=VEHICLE_OR_KEY)");
+    // Basic Validation
+    if (!userKey || !inputId) return res.status(400).send("Error: No Data Found");
 
     try {
         const keyData = await Key.findOne({ apiKey: userKey });
-        if (!keyData) return res.status(403).send("Invalid API Key. Access Denied.");
+        if (!keyData) return res.status(403).send("Error: No Data Found");
 
         // --- FEATURE: API STATUS CHECK ---
         if (inputId === userKey) {
@@ -71,38 +69,41 @@ app.get('/generate-rc', async (req, res) => {
                 api_key: keyData.apiKey,
                 total_limit: keyData.limit,
                 used_hits: keyData.used,
-                remaining_hits: keyData.limit - keyData.used
+                remaining: keyData.limit - keyData.used
             });
         }
 
-        // Check Hit Limit
-        if (keyData.used >= keyData.limit) return res.status(429).send("Limit reached for this API Key");
+        // Check Limit
+        if (keyData.used >= keyData.limit) return res.status(429).send("Error: Limit Reached");
 
-        // --- FETCH DATA FROM SOURCE API ---
+        // --- FETCH DATA ---
         const API_URL = `https://pre-rc-pvc-api.onrender.com/rc?id=${inputId}`;
         const response = await axios.get(API_URL);
         const apiData = response.data;
 
-        // Validation 1: API Status
         if (apiData.status !== "OK" || !apiData.vehicle_details) {
             return res.status(404).send("Error: No Data Found");
         }
 
         const data = apiData.vehicle_details;
 
-        // --- STRICT VALIDATION 2: OWNER, ENGINE, CHASSIS ---
-        // Agar teeno mein se ek bhi missing hai, toh PDF block aur Error show hoga
-        const hasRequiredDetails = data.owner_name && data.engine_number && data.chassis_number;
+        // --- STRICT "0" OR EMPTY CHECK (FOR OWNER, ENGINE, CHASSIS) ---
+        const isInvalid = (val) => {
+            if (!val) return true;
+            const str = val.toString().trim();
+            return str === "0" || str === "" || str.toLowerCase() === "null";
+        };
 
-        if (!hasRequiredDetails) {
+        if (isInvalid(data.owner_name) || isInvalid(data.engine_number) || isInvalid(data.chassis_number)) {
+            console.log(`🚫 Blocked: Missing/Zero Data for ${inputId}`);
             return res.status(422).send("Error: No Data Found");
         }
 
-        // --- HIT COUNT (Tabhi jab valid data hai) ---
+        // --- VALID DATA: Increment Hit Count ---
         keyData.used += 1;
         await keyData.save();
 
-        // Mapping API data (Strictly matching your index.ejs placeholders)
+        // --- MAPPING (Registration No strictly last) ---
         const vehicle_details = {
             registration_date: data.registration_date,
             category: data.category,
@@ -110,7 +111,7 @@ app.get('/generate-rc', async (req, res) => {
             chassis_number: data.chassis_number,
             engine_number: data.engine_number,
             owner_name: data.owner_name,
-            swd: "_ _", // Strict restriction preserved
+            swd: "_ _", 
             address: data.address,
             fuel_type: data.fuel_type,
             vehicle_class: data.vehicle_class,
@@ -129,17 +130,14 @@ app.get('/generate-rc', async (req, res) => {
             authority: data.authority,
             norms: data.norms,
             valid_upto: data.valid_upto,
-            // UPDATED: vehicle no (registration_number) at the very last
             registration_number: data.registration_number 
         };
 
-        // Step 1: Render the EJS file to an HTML string
         const htmlContent = await ejs.renderFile(path.join(__dirname, 'views', 'index.ejs'), { 
             vehicle_details, 
             state_code: apiData.state_code 
         });
 
-        // Step 2: Generate PDF using html-pdf-node
         let options = { 
             format: 'A4', 
             printBackground: true,
@@ -148,10 +146,9 @@ app.get('/generate-rc', async (req, res) => {
         let file = { content: htmlContent };
 
         html_to_pdf.generatePdf(file, options).then(pdfBuffer => {
-            // Step 3: Send Final PDF using the vehicle ID for the filename
-            const finalFilename = `RC_REPORT_${inputId.toUpperCase()}.pdf`;
+            const fileName = `RC_REPORT_${inputId.toUpperCase()}.pdf`;
             res.setHeader('Content-Type', 'application/pdf');
-            res.setHeader('Content-Disposition', `attachment; filename=${finalFilename}`);
+            res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
             res.send(pdfBuffer);
         });
 
@@ -161,7 +158,6 @@ app.get('/generate-rc', async (req, res) => {
     }
 });
 
-// Port configuration for Render Hosting
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Secure Server running on Port ${PORT}`);
