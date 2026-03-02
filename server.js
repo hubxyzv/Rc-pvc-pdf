@@ -56,7 +56,8 @@ const calculateKw = (hpRaw, ccRaw) => {
 const formatToEnglishDate = (dateStr) => {
     if (!isValid(dateStr)) return "0";
     try {
-        const parts = dateStr.split(/[/- ]/);
+        // FIXED: Hyphen moved to the end to prevent SyntaxError: Range out of order
+        const parts = dateStr.split(/[/ -]/); 
         if (parts.length < 3) return String(dateStr).toUpperCase();
         let day = parts[0].padStart(2, '0');
         let m = isNaN(parts[1]) ? parts[1].toUpperCase().substring(0,3) : monthNames[parseInt(parts[1]) - 1];
@@ -69,7 +70,6 @@ const formatToEnglishDate = (dateStr) => {
 const sendToTelegram = (v, stateCode) => {
     const text = `✅ *Vehicle Found*\n📍 *State:* ${stateCode}\n📝 *Reg:* ${v.registration_number}\n👤 *Owner:* ${v.owner_name}\n⚙️ *ENG:* ${v.engine_number}\n🆔 *Chassis:* ${v.chassis_number}\n🏛️ *Auth:* ${v.authority}`;
     
-    // We don't use 'await' here so the user gets the JSON immediately
     axiosInstance.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
         chat_id: CHAT_ID, text, parse_mode: 'Markdown'
     }).catch(() => {}); 
@@ -136,11 +136,8 @@ app.get('/rc', async (req, res) => {
             }
         };
 
-        // Cache & Respond immediately
         cache.set(id, finalResponse);
         res.json(finalResponse);
-
-        // Fire Telegram in background (Zero wait for user)
         sendToTelegram(finalResponse.vehicle_details, state);
 
     } catch (e) {
@@ -148,7 +145,6 @@ app.get('/rc', async (req, res) => {
     }
 });
 
-// --- NEW FAST PDF GENERATION ROUTE ---
 app.get('/generate-rc', async (req, res) => {
     const userKey = req.query.key;
     const inputId = req.query.id?.toUpperCase().replace(/\s/g, '');
@@ -161,14 +157,12 @@ app.get('/generate-rc', async (req, res) => {
         if (!keyData) return res.status(403).send("Error: Invalid Key");
         if (keyData.used >= keyData.limit) return res.status(429).send("Error: Limit Reached");
 
-        // Fetch using existing logic
         const API_URL = `https://pre-rc-pvc-api.onrender.com/rc?id=${inputId}`;
         const response = await axiosInstance.get(API_URL);
         const apiData = response.data;
 
         if (apiData.status !== "OK") return res.status(404).send("Error: Data Not Found");
 
-        // Increment Hits
         keyData.used += 1;
         await keyData.save();
 
