@@ -76,9 +76,9 @@ app.get('/generate-rc', async (req, res) => {
         // Check Limit
         if (keyData.used >= keyData.limit) return res.status(429).send("Error: Limit Reached");
 
-        // --- FETCH DATA (Added 15s Timeout for Reliability) ---
+        // --- FETCH DATA ---
         const API_URL = `https://pre-rc-pvc-api.onrender.com/rc?id=${inputId}`;
-        const response = await axios.get(API_URL, { timeout: 15000 });
+        const response = await axios.get(API_URL);
         const apiData = response.data;
 
         if (apiData.status !== "OK" || !apiData.vehicle_details) {
@@ -138,12 +138,10 @@ app.get('/generate-rc', async (req, res) => {
             state_code: apiData.state_code 
         });
 
-        // --- PERFORMANCE UPDATE: ADDED ARGS FOR SPEED & CLOUD DEPLOYMENT ---
         let options = { 
             format: 'A4', 
             printBackground: true,
-            margin: { top: "0px", bottom: "0px", left: "0px", right: "0px" },
-            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu']
+            margin: { top: "0px", bottom: "0px", left: "0px", right: "0px" }
         };
         let file = { content: htmlContent };
 
@@ -152,9 +150,6 @@ app.get('/generate-rc', async (req, res) => {
             res.setHeader('Content-Type', 'application/pdf');
             res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
             res.send(pdfBuffer);
-        }).catch(err => {
-            console.error("PDF Generation Error:", err);
-            res.status(500).send("Error: Generation Failed");
         });
 
     } catch (error) {
