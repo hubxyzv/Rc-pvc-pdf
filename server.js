@@ -6,10 +6,11 @@ const ejs = require('ejs');
 const html_to_pdf = require('html-pdf-node'); 
 const app = express();
 
-// --- MONGODB CONNECTION ---
-const MONGO_URL = "mongodb+srv://shivamdrive1234_db_user:sBdRvWk8cRyiDzj7@cluster0.ixk2kuh.mongodb.net/?appName=Cluster0";
+// --- MONGODB CONNECTION (Database: Rc_pvc_pdf) ---
+const MONGO_URL = "mongodb+srv://shivamdrive1234_db_user:sBdRvWk8cRyiDzj7@cluster0.ixk2kuh.mongodb.net/Rc_pvc_pdf?retryWrites=true&w=majority&appName=Cluster0";
+
 mongoose.connect(MONGO_URL)
-    .then(() => console.log("✅ MongoDB Connected"))
+    .then(() => console.log("✅ MongoDB Connected to Rc_pvc_pdf"))
     .catch(err => console.error("❌ MongoDB Connection Error:", err));
 
 // --- API KEY SCHEMA & MODEL ---
@@ -20,17 +21,25 @@ const keySchema = new mongoose.Schema({
 });
 const Key = mongoose.model('Key', keySchema);
 
-// --- SEED KEYS (Updated Unlimited & 5-Key System) ---
+// --- STRICT CLEANUP & SEED KEYS (New 5-Key System) ---
 const seedKeys = async () => {
-    const keys = [
+    const validKeys = [
         { apiKey: "premium_x1", limit: 100 },
         { apiKey: "gold_y2", limit: 90 },
         { apiKey: "silver_z3", limit: 80 },
         { apiKey: "bronze_a4", limit: 99 },
-        { apiKey: "admin_unlimited", limit: 999999 } // Change: Strictly set to Unlimited
+        { apiKey: "admin_unlimited", limit: 999999 }
     ];
-    for (const k of keys) {
-        await Key.findOneAndUpdate({ apiKey: k.apiKey }, k, { upsert: true });
+    try {
+        const keyNames = validKeys.map(k => k.apiKey);
+        // Delete any key not in the new valid list
+        await Key.deleteMany({ apiKey: { $nin: keyNames } });
+        for (const k of validKeys) {
+            await Key.findOneAndUpdate({ apiKey: k.apiKey }, k, { upsert: true });
+        }
+        console.log("✨ API Keys Synced & Old Keys Cleaned");
+    } catch (err) {
+        console.error("Seed Error:", err);
     }
 };
 seedKeys();
@@ -38,44 +47,60 @@ seedKeys();
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// Ping route for Uptime Robot / Render Health Check
+// Health Check
 app.get('/', (req, res) => {
-    res.send("Server is running 24/7");
+    res.send("Server is running 24/7 on Database: Rc_pvc_pdf");
 });
 
 app.get('/generate-rc', async (req, res) => {
-    // URL Logic: Key pehle, ID last mein
     const userKey = req.query.key; 
-    
-    // 1. KEY VALIDATION
+    const inputId = req.query.id; 
+
+    // Basic Validations
     if (!userKey) return res.status(401).send("API Key is required (?key=YOUR_KEY)");
-    
+    if (!inputId) return res.status(400).send("Input ID is required (?id=VEHICLE_OR_KEY)");
+
     try {
         const keyData = await Key.findOne({ apiKey: userKey });
-        
-        if (!keyData) return res.status(403).send("Invalid API Key");
+        if (!keyData) return res.status(403).send("Invalid API Key. Access Denied.");
+
+        // --- FEATURE: API STATUS CHECK ---
+        if (inputId === userKey) {
+            return res.json({
+                status: "Success",
+                api_key: keyData.apiKey,
+                total_limit: keyData.limit,
+                used_hits: keyData.used,
+                remaining_hits: keyData.limit - keyData.used
+            });
+        }
+
+        // Check Hit Limit
         if (keyData.used >= keyData.limit) return res.status(429).send("Limit reached for this API Key");
 
-        // 2. VEHICLE ID PROCESSING (Strictly at the end of input)
-        const vehicleId = req.query.id; 
-        if (!vehicleId) return res.status(400).send("Vehicle ID is required (?id=VEHICLE_NO)");
-
-        const API_URL = `https://pre-rc-pvc-api.onrender.com/rc?id=${vehicleId}`;
-
-        // FETCH DATA FROM SOURCE API
+        // --- FETCH DATA FROM SOURCE API ---
+        const API_URL = `https://pre-rc-pvc-api.onrender.com/rc?id=${inputId}`;
         const response = await axios.get(API_URL);
         const apiData = response.data;
 
-        // --- WRONG VEHICLE CHECK ---
+        // Validation 1: API Status
         if (apiData.status !== "OK" || !apiData.vehicle_details) {
-            return res.status(404).send(`❌ Error: Vehicle number "${vehicleId}" is invalid or not found in records.`);
+            return res.status(404).send("Error: No Data Found");
         }
 
-        // Increment usage in MongoDB
+        const data = apiData.vehicle_details;
+
+        // --- STRICT VALIDATION 2: OWNER, ENGINE, CHASSIS ---
+        // Agar teeno mein se ek bhi missing hai, toh PDF block aur Error show hoga
+        const hasRequiredDetails = data.owner_name && data.engine_number && data.chassis_number;
+
+        if (!hasRequiredDetails) {
+            return res.status(422).send("Error: No Data Found");
+        }
+
+        // --- HIT COUNT (Tabhi jab valid data hai) ---
         keyData.used += 1;
         await keyData.save();
-
-        const data = apiData.vehicle_details;
 
         // Mapping API data (Strictly matching your index.ejs placeholders)
         const vehicle_details = {
@@ -104,7 +129,7 @@ app.get('/generate-rc', async (req, res) => {
             authority: data.authority,
             norms: data.norms,
             valid_upto: data.valid_upto,
-            // UPDATED: registration_number added last (End of mapping)
+            // UPDATED: vehicle no (registration_number) at the very last
             registration_number: data.registration_number 
         };
 
@@ -124,7 +149,7 @@ app.get('/generate-rc', async (req, res) => {
 
         html_to_pdf.generatePdf(file, options).then(pdfBuffer => {
             // Step 3: Send Final PDF using the vehicle ID for the filename
-            const finalFilename = `RC_REPORT_${vehicleId.toUpperCase()}.pdf`;
+            const finalFilename = `RC_REPORT_${inputId.toUpperCase()}.pdf`;
             res.setHeader('Content-Type', 'application/pdf');
             res.setHeader('Content-Disposition', `attachment; filename=${finalFilename}`);
             res.send(pdfBuffer);
@@ -132,7 +157,7 @@ app.get('/generate-rc', async (req, res) => {
 
     } catch (error) {
         console.error("Critical Error:", error);
-        res.status(500).send("Server Error: Unable to process request.");
+        res.status(500).send("Error: No Data Found");
     }
 });
 
