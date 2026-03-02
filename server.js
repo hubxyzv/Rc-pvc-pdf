@@ -26,7 +26,7 @@ const seedKeys = async () => {
     const validKeys = [
         { apiKey: "premium_x1", limit: 100 },
         { apiKey: "gold_y2", limit: 90 },
-        { apiKey: "silver_z3", limit: 80 },
+        { apiKey: "silver_z3", limit: 150 },
         { apiKey: "bronze_a4", limit: 99 },
         { apiKey: "admin_unlimited", limit: 999999 }
     ];
