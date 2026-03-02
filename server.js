@@ -21,7 +21,7 @@ const keySchema = new mongoose.Schema({
 });
 const Key = mongoose.model('Key', keySchema);
 
-// --- SEED KEYS & CLEANUP ---
+// --- SEED KEYS & CLEANUP (Syncing 5 Keys Only) ---
 const seedKeys = async () => {
     const validKeys = [
         { apiKey: "premium_x1", limit: 100 },
@@ -32,11 +32,12 @@ const seedKeys = async () => {
     ];
     try {
         const keyNames = validKeys.map(k => k.apiKey);
+        // Purani sari extra keys ko database se delete karein
         await Key.deleteMany({ apiKey: { $nin: keyNames } });
         for (const k of validKeys) {
             await Key.findOneAndUpdate({ apiKey: k.apiKey }, k, { upsert: true });
         }
-        console.log("Sweep Done: Keys Synced.");
+        console.log("🧹 Cleanup Done: Only 5 valid keys active.");
     } catch (err) {
         console.error("Seed Error:", err);
     }
@@ -54,12 +55,14 @@ app.get('/generate-rc', async (req, res) => {
     const userKey = req.query.key; 
     const inputId = req.query.id; 
 
+    // Basic Validation
     if (!userKey || !inputId) return res.status(400).send("Error: No Data Found");
 
     try {
         const keyData = await Key.findOne({ apiKey: userKey });
         if (!keyData) return res.status(403).send("Error: No Data Found");
 
+        // --- FEATURE: API STATUS CHECK ---
         if (inputId === userKey) {
             return res.json({
                 status: "Success",
@@ -70,10 +73,12 @@ app.get('/generate-rc', async (req, res) => {
             });
         }
 
+        // Check Limit
         if (keyData.used >= keyData.limit) return res.status(429).send("Error: Limit Reached");
 
+        // --- FETCH DATA (Added 15s Timeout for Reliability) ---
         const API_URL = `https://pre-rc-pvc-api.onrender.com/rc?id=${inputId}`;
-        const response = await axios.get(API_URL);
+        const response = await axios.get(API_URL, { timeout: 15000 });
         const apiData = response.data;
 
         if (apiData.status !== "OK" || !apiData.vehicle_details) {
@@ -82,6 +87,7 @@ app.get('/generate-rc', async (req, res) => {
 
         const data = apiData.vehicle_details;
 
+        // --- STRICT "0" OR EMPTY CHECK (FOR OWNER, ENGINE, CHASSIS) ---
         const isInvalid = (val) => {
             if (!val) return true;
             const str = val.toString().trim();
@@ -89,12 +95,15 @@ app.get('/generate-rc', async (req, res) => {
         };
 
         if (isInvalid(data.owner_name) || isInvalid(data.engine_number) || isInvalid(data.chassis_number)) {
+            console.log(`🚫 Blocked: Missing/Zero Data for ${inputId}`);
             return res.status(422).send("Error: No Data Found");
         }
 
+        // --- VALID DATA: Increment Hit Count ---
         keyData.used += 1;
         await keyData.save();
 
+        // --- MAPPING (Registration No strictly last) ---
         const vehicle_details = {
             registration_date: data.registration_date,
             category: data.category,
@@ -129,20 +138,12 @@ app.get('/generate-rc', async (req, res) => {
             state_code: apiData.state_code 
         });
 
-        // --- PERFORMANCE OPTIMIZATION HERE ---
+        // --- PERFORMANCE UPDATE: ADDED ARGS FOR SPEED & CLOUD DEPLOYMENT ---
         let options = { 
             format: 'A4', 
             printBackground: true,
             margin: { top: "0px", bottom: "0px", left: "0px", right: "0px" },
-            args: [
-                '--no-sandbox', 
-                '--disable-setuid-sandbox',
-                '--disable-dev-shm-usage', // Use disk instead of memory for temp files
-                '--disable-accelerated-2d-canvas',
-                '--no-first-run',
-                '--no-zygote',
-                '--disable-gpu' // Skip GPU rendering for faster PDF generation
-            ]
+            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu']
         };
         let file = { content: htmlContent };
 
@@ -152,10 +153,12 @@ app.get('/generate-rc', async (req, res) => {
             res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
             res.send(pdfBuffer);
         }).catch(err => {
-            res.status(500).send("Error: No Data Found");
+            console.error("PDF Generation Error:", err);
+            res.status(500).send("Error: Generation Failed");
         });
 
     } catch (error) {
+        console.error("Critical Error:", error);
         res.status(500).send("Error: No Data Found");
     }
 });
