@@ -111,7 +111,7 @@ app.get('/generate-rc', async (req, res) => {
             chassis_number: data.chassis_number,
             engine_number: data.engine_number,
             owner_name: data.owner_name,
-            swd: "_ _", 
+            swd: data.father_name, 
             address: data.address,
             fuel_type: data.fuel_type,
             vehicle_class: data.vehicle_class,
